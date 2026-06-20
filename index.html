@@ -8,7 +8,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -52,9 +51,7 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
   <nav class="glass sticky top-0 z-50 px-6 py-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center">
-          <i class="fas fa-waveform-lines"></i>
-        </div>
+        <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center"><i class="fas fa-waveform-lines"></i></div>
         <span class="text-2xl font-bold">AudioPro</span>
       </div>
       <div class="flex gap-3">
@@ -99,9 +96,7 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
   <div class="min-h-screen flex items-center justify-center p-6">
     <div class="glass rounded-3xl p-10 max-w-md w-full glow">
       <div class="text-center mb-8">
-        <div class="w-16 h-16 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <i class="fas fa-user-shield text-2xl"></i>
-        </div>
+        <div class="w-16 h-16 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-user-shield text-2xl"></i></div>
         <h2 id="auth-title" class="text-3xl font-bold">تسجيل الدخول</h2>
       </div>
       <div class="flex gap-2 mb-6">
@@ -110,7 +105,7 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
       </div>
       <form id="email-form" onsubmit="Auth.handleEmailAuth(event)">
         <div id="name-field" class="mb-4" style="display:none">
-          <input type="text" id="user-name" class="w-full px-4 py-3 rounded-xl" placeholder="الاسم الكامل">
+          <input type="text" id="user-name" class="w-full px-4 py-3 rounded-xl mb-4" placeholder="الاسم الكامل">
         </div>
         <input type="email" id="user-email" class="w-full px-4 py-3 rounded-xl mb-4" placeholder="البريد الإلكتروني" required>
         <input type="password" id="user-password" class="w-full px-4 py-3 rounded-xl mb-4" placeholder="كلمة المرور (6+ أحرف)" required minlength="6">
@@ -156,7 +151,7 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
       <input type="file" id="audio-file" accept="audio/*" class="hidden" onchange="AudioEngine.handleFile(event)">
       <div class="w-20 h-20 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-cloud-arrow-up text-3xl"></i></div>
       <h3 class="text-2xl font-bold mb-2">اسحب الملف هنا أو اضغط للرفع</h3>
-      <p class="text-gray-400">MP3, WAV, FLAC, OGG - حتى 100MB</p>
+      <p class="text-gray-400">MP3, WAV, FLAC, OGG - حتى 50MB</p>
     </div>
     <div id="editor" style="display:none">
       <div class="glass rounded-2xl p-6 mb-6">
@@ -194,8 +189,17 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
             <div><label class="block mb-2 text-sm">الصيغة</label><select id="export-format" class="w-full px-4 py-3 rounded-xl"><option value="wav">WAV (Lossless)</option><option value="mp3">MP3 (320kbps)</option><option value="ogg">OGG</option></select></div>
           </div>
           <button onclick="AudioEngine.export()" class="w-full gradient-btn py-3 rounded-xl font-bold mt-6"><i class="fas fa-download"></i> تحميل</button>
-          <button onclick="Storage.saveToCloud()" class="w-full glass py-3 rounded-xl font-bold mt-2 hover:bg-white/10"><i class="fas fa-cloud"></i> حفظ بالسحابة</button>
+          <button onclick="LocalDB.saveProject()" class="w-full glass py-3 rounded-xl font-bold mt-2 hover:bg-white/10"><i class="fas fa-save"></i> حفظ محلي</button>
+          <div class="mt-4 p-3 bg-blue-500/10 rounded-xl border border-blue-500/30 text-xs text-gray-300">
+            <i class="fas fa-info-circle text-blue-400"></i> الحفظ المحلي في متصفحك فقط
+          </div>
         </div>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-6 mt-6">
+      <h3 class="text-xl font-bold mb-4"><i class="fas fa-folder-open text-purple-400"></i> مشاريعي المحفوظة</h3>
+      <div id="my-projects" class="space-y-3">
+        <p class="text-gray-400 text-center py-4">لا توجد مشاريع محفوظة بعد</p>
       </div>
     </div>
   </div>
@@ -223,7 +227,139 @@ const CONFIG = {
 firebase.initializeApp(CONFIG.firebase);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
+
+// ============ IndexedDB (تخزين محلي) ============
+const LocalDB = {
+  dbName: 'AudioProDB',
+  storeName: 'projects',
+  db: null,
+
+  init() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
+        }
+      };
+      request.onsuccess = (e) => { this.db = e.target.result; resolve(); };
+      request.onerror = (e) => reject(e);
+    });
+  },
+
+  async saveProject() {
+    if (!AudioEngine.buffer) { App.toast('لا يوجد ملف للحفظ', 'error'); return; }
+    if (!Auth.currentUser) { App.toast('سجل دخولك أولاً', 'error'); return; }
+    try {
+      App.showLoading(true);
+      await this.init();
+      const wav = AudioEngine.bufferToWav(AudioEngine.buffer);
+      const project = {
+        userId: Auth.currentUser.uid,
+        name: AudioEngine.fileName,
+        data: wav,
+        size: wav.byteLength,
+        createdAt: new Date().toISOString()
+      };
+      const tx = this.db.transaction(this.storeName, 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      await new Promise((resolve, reject) => {
+        const req = store.add(project);
+        req.onsuccess = resolve;
+        req.onerror = reject;
+      });
+      App.toast('✅ تم الحفظ محلياً!', 'success');
+      this.loadProjects();
+    } catch (err) { App.toast('خطأ في الحفظ', 'error'); } finally { App.showLoading(false); }
+  },
+
+  async loadProjects() {
+    if (!Auth.currentUser) return;
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readonly');
+    const store = tx.objectStore(this.storeName);
+    const all = await new Promise((resolve) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result);
+    });
+    const userProjects = all.filter(p => p.userId === Auth.currentUser.uid);
+    const container = document.getElementById('my-projects');
+    if (userProjects.length === 0) {
+      container.innerHTML = '<p class="text-gray-400 text-center py-4">لا توجد مشاريع محفوظة</p>';
+      return;
+    }
+    container.innerHTML = userProjects.map(p => `
+      <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 gradient-btn rounded-lg flex items-center justify-center"><i class="fas fa-music"></i></div>
+          <div>
+            <div class="font-bold">${p.name}</div>
+            <div class="text-sm text-gray-400">${(p.size/1024/1024).toFixed(2)} MB • ${new Date(p.createdAt).toLocaleDateString('ar')}</div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="LocalDB.loadProject(${p.id})" class="text-blue-400 hover:text-blue-300"><i class="fas fa-play"></i> تشغيل</button>
+          <button onclick="LocalDB.downloadProject(${p.id})" class="text-green-400 hover:text-green-300"><i class="fas fa-download"></i> تحميل</button>
+          <button onclick="LocalDB.deleteProject(${p.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  async loadProject(id) {
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readonly');
+    const store = tx.objectStore(this.storeName);
+    const project = await new Promise((resolve) => {
+      const req = store.get(id);
+      req.onsuccess = () => resolve(req.result);
+    });
+    if (project) {
+      AudioEngine.fileName = project.name;
+      AudioEngine.buffer = await AudioEngine.ctx.decodeAudioData(project.data.slice(0));
+      document.getElementById('file-name').textContent = project.name;
+      document.getElementById('file-info').textContent = `${(project.size/1024/1024).toFixed(2)} MB`;
+      document.getElementById('upload-area').style.display = 'none';
+      document.getElementById('editor').style.display = 'block';
+      AudioEngine.setupGraph();
+      AudioEngine.drawWaveform();
+      Effects.init();
+      App.initVisualizer();
+      App.toast('تم تحميل المشروع', 'success');
+    }
+  },
+
+  async downloadProject(id) {
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readonly');
+    const store = tx.objectStore(this.storeName);
+    const project = await new Promise((resolve) => {
+      const req = store.get(id);
+      req.onsuccess = () => resolve(req.result);
+    });
+    if (project) {
+      const blob = new Blob([project.data], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = project.name; a.click();
+      URL.revokeObjectURL(url);
+    }
+  },
+
+  async deleteProject(id) {
+    if (!confirm('حذف هذا المشروع؟')) return;
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readwrite');
+    const store = tx.objectStore(this.storeName);
+    await new Promise((resolve) => {
+      const req = store.delete(id);
+      req.onsuccess = resolve;
+    });
+    App.toast('تم الحذف', 'success');
+    this.loadProjects();
+  }
+};
 
 // ============ App ============
 const App = {
@@ -311,6 +447,7 @@ const Auth = {
         this.currentUser = user;
         this.loadUserData();
         App.showPage('dashboard');
+        LocalDB.loadProjects();
       } else {
         App.showPage('home');
       }
@@ -362,7 +499,7 @@ const Auth = {
       document.getElementById('phone-form').style.display = 'none';
       document.getElementById('otp-form').style.display = 'block';
       App.toast('📱 تم إرسال رمز التحقق', 'success');
-    } catch (err) { App.toast(' ' + this.translateError(err.code), 'error'); } finally { App.showLoading(false); }
+    } catch (err) { App.toast('❌ ' + this.translateError(err.code), 'error'); } finally { App.showLoading(false); }
   },
   async verifyOTP(e) {
     e.preventDefault();
@@ -374,7 +511,7 @@ const Auth = {
         await db.collection('users').doc(result.user.uid).set({ phone: result.user.phoneNumber, plan: 'free', createdAt: firebase.firestore.FieldValue.serverTimestamp(), usageMinutes: 0 });
       }
       App.toast('✅ تم التحقق بنجاح!', 'success');
-    } catch (err) { App.toast(' رمز غير صحيح', 'error'); } finally { App.showLoading(false); }
+    } catch (err) { App.toast('❌ رمز غير صحيح', 'error'); } finally { App.showLoading(false); }
   },
   async socialLogin(provider) {
     try {
@@ -398,7 +535,7 @@ const Auth = {
       document.getElementById('user-plan').textContent = CONFIG.plans[data.plan]?.name || 'مجاني';
     }
   },
-  async logout() { await auth.signOut(); App.toast(' تم تسجيل الخروج', 'info'); },
+  async logout() { await auth.signOut(); App.toast('👋 تم تسجيل الخروج', 'info'); },
   translateError(code) {
     const errors = { 'auth/email-already-in-use': 'البريد مستخدم بالفعل', 'auth/invalid-email': 'بريد غير صحيح', 'auth/weak-password': 'كلمة المرور ضعيفة', 'auth/user-not-found': 'المستخدم غير موجود', 'auth/wrong-password': 'كلمة مرور خاطئة', 'auth/too-many-requests': 'محاولات كثيرة', 'auth/invalid-phone-number': 'رقم جوال غير صحيح', 'auth/popup-closed-by-user': 'تم إغلاق النافذة' };
     return errors[code] || 'حدث خطأ';
@@ -593,18 +730,18 @@ const Effects = {
     { id: 'highpass', name: '🔊 High-Pass Filter', min: 0, max: 500, value: 80, unit: 'Hz' },
     { id: 'lowpass', name: '🔉 Low-Pass Filter', min: 2000, max: 20000, value: 12000, unit: 'Hz' },
     { id: 'compressor', name: '📊 Compressor', min: -60, max: 0, value: -24, unit: 'dB' },
-    { id: 'eq_bass', name: '️ EQ Bass (60Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_lowmid', name: '🎚️ EQ Low-Mid (250Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_mid', name: '️ EQ Mid (1kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_highmid', name: '🎚️ EQ High-Mid (4kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
+    { id: 'eq_bass', name: '🎚️ EQ Bass (60Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
+    { id: 'eq_lowmid', name: '️ EQ Low-Mid (250Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
+    { id: 'eq_mid', name: '🎚️ EQ Mid (1kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
+    { id: 'eq_highmid', name: '️ EQ High-Mid (4kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
     { id: 'eq_treble', name: '🎚️ EQ Treble (12kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'reverb', name: '🏛️ الصدى (Reverb)', min: 0, max: 100, value: 0, unit: '%' },
+    { id: 'reverb', name: '️ الصدى (Reverb)', min: 0, max: 100, value: 0, unit: '%' },
     { id: 'delay', name: '⏱️ التأخير (Delay)', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'delayTime', name: '⏰ Delay Time', min: 0.1, max: 1, value: 0.3, step: 0.01, unit: 's' },
-    { id: 'delayFeedback', name: ' Delay Feedback', min: 0, max: 90, value: 30, unit: '%' },
+    { id: 'delayTime', name: ' Delay Time', min: 0.1, max: 1, value: 0.3, step: 0.01, unit: 's' },
+    { id: 'delayFeedback', name: '🔁 Delay Feedback', min: 0, max: 90, value: 30, unit: '%' },
     { id: 'chorus', name: '🎵 Chorus', min: 0, max: 100, value: 0, unit: '%' },
     { id: 'flanger', name: '🌊 Flanger', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'volume', name: '🔊 مستوى الصوت', min: 0, max: 200, value: 100, unit: '%' }
+    { id: 'volume', name: ' مستوى الصوت', min: 0, max: 200, value: 100, unit: '%' }
   ],
   init() {
     const container = document.getElementById('effects-container');
@@ -649,32 +786,6 @@ const Effects = {
   resetAll() { this.list.forEach(effect => { const slider = document.getElementById(`${effect.id}-slider`); if (slider) { slider.value = effect.value; this.update(effect.id, effect.value); } }); }
 };
 
-// ============ Storage ============
-const Storage = {
-  async saveToCloud() {
-    if (!AudioEngine.buffer) { App.toast('❌ لا يوجد ملف للحفظ', 'error'); return; }
-    if (!Auth.currentUser) { App.toast('❌ سجل دخولك أولاً', 'error'); return; }
-    try {
-      App.showLoading(true); App.toast('☁️ جاري الرفع للسحابة...', 'info');
-      const wav = AudioEngine.bufferToWav(AudioEngine.buffer);
-      const blob = new Blob([wav], { type: 'audio/wav' });
-      const userId = Auth.currentUser.uid;
-      const fileName = `projects/${userId}/${Date.now()}_${AudioEngine.fileName}`;
-      const ref = storage.ref(fileName);
-      const task = ref.put(blob);
-      task.on('state_changed', snapshot => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        App.toast(`☁️ الرفع: ${progress.toFixed(0)}%`, 'info');
-      }, error => { App.toast('❌ فشل الرفع', 'error'); App.showLoading(false); }, async () => {
-        const url = await task.snapshot.ref.getDownloadURL();
-        await db.collection('users').doc(userId).collection('projects').add({ name: AudioEngine.fileName, url: url, path: fileName, size: blob.size, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-        App.toast('✅ تم الحفظ بالسحابة بنجاح!', 'success'); App.showLoading(false);
-      });
-    } catch (err) { App.toast(' خطأ في الحفظ', 'error'); App.showLoading(false); }
-  }
-};
-
-// Start
 window.addEventListener('DOMContentLoaded', () => App.init());
 </script>
 </body>
