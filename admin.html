@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AudioPro - لوحة تحكم المطور</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+* { font-family: 'Cairo', sans-serif; }
+body { background: #0f172a; color: white; margin: 0; }
+.glass { background: rgba(30,41,59,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+.gradient-btn { background: linear-gradient(135deg, #667eea, #764ba2); }
+.gradient-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
+.stat-card { transition: all 0.3s; }
+.stat-card:hover { transform: translateY(-5px); }
+.table-row { transition: all 0.2s; }
+.table-row:hover { background: rgba(102,126,234,0.1); }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+.badge-active { background: rgba(34,197,94,0.2); color: #4ade80; }
+.badge-free { background: rgba(102,126,234,0.2); color: #818cf8; }
+.badge-pro { background: rgba(250,204,21,0.2); color: #fde047; }
+.badge-studio { background: rgba(168,85,247,0.2); color: #c084fc; }
+.toast { padding: 12px 20px; border-radius: 12px; animation: slideIn 0.3s; margin-bottom: 8px; }
+.toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); }
+.toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); }
+@keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.tab-active { background: linear-gradient(135deg, #667eea, #764ba2); }
+</style>
+</head>
+<body>
+
+<div id="admin-login" class="min-h-screen flex items-center justify-center p-6">
+  <div class="glass rounded-3xl p-10 max-w-md w-full">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-shield-halved text-3xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold">لوحة تحكم المطور</h1>
+      <p class="text-gray-400 mt-2">AudioPro Studio Admin Panel</p>
+    </div>
+    <form onsubmit="AdminAuth.login(event)">
+      <div class="mb-4">
+        <label class="block mb-2 text-sm">البريد الإلكتروني</label>
+        <input type="email" id="admin-email" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="admin@audiopro.com" required>
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2 text-sm">كلمة المرور</label>
+        <input type="password" id="admin-password" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="••••••••" required>
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2 text-sm">رمز المطور (Developer Code)</label>
+        <input type="password" id="admin-code" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="أدخل رمز الأمان" required>
+      </div>
+      <button type="submit" class="w-full gradient-btn py-4 rounded-xl font-bold text-lg">
+        <i class="fas fa-right-to-bracket ml-2"></i> دخول
+      </button>
+    </form>
+    <p class="text-center mt-6 text-gray-400 text-sm">
+      <a href="index.html" class="text-purple-400 hover:underline">← العودة للموقع</a>
+    </p>
+  </div>
+</div>
+
+<div id="admin-panel" style="display:none">
+  <div class="fixed right-0 top-0 h-full w-64 glass z-40 p-6">
+    <div class="flex items-center gap-2 mb-8">
+      <div class="w-10 h-10 gradient-btn rounded-xl flex items-center justify-center">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+      <span class="text-xl font-bold">Admin Panel</span>
+    </div>
+    <nav class="space-y-2">
+      <button onclick="Admin.showTab('dashboard')" id="tab-dashboard" class="w-full text-right px-4 py-3 rounded-xl tab-active flex items-center gap-3">
+        <i class="fas fa-chart-line"></i> لوحة التحكم
+      </button>
+      <button onclick="Admin.showTab('users')" id="tab-users" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
+        <i class="fas fa-users"></i> المستخدمون
+      </button>
+      <button onclick="Admin.showTab('projects')" id="tab-projects" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
+        <i class="fas fa-folder"></i> المشاريع
+      </button>
+      <button onclick="Admin.showTab('settings')" id="tab-settings" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
+        <i class="fas fa-gear"></i> الإعدادات
+      </button>
+      <button onclick="AdminAuth.logout()" class="w-full text-right px-4 py-3 rounded-xl hover:bg-red-500/20 text-red-400 flex items-center gap-3 mt-8">
+        <i class="fas fa-sign-out"></i> خروج
+      </button>
+    </nav>
+  </div>
+
+  <div class="mr-64 p-8">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold" id="page-title">لوحة التحكم</h1>
+        <p class="text-gray-400 mt-1">مرحباً بك، <span id="admin-name">المطور</span></p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="glass px-4 py-2 rounded-xl">
+          <i class="fas fa-circle text-green-400 ml-2"></i>
+          <span class="text-sm">متصل</span>
+        </div>
+        <button onclick="Admin.refreshData()" class="gradient-btn px-4 py-2 rounded-xl">
+          <i class="fas fa-rotate-right"></i> تحديث
+        </button>
+      </div>
+    </div>
+
+    <div id="content-dashboard" class="tab-content">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 gradient-btn rounded-xl flex items-center justify-center">
+              <i class="fas fa-users text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-users">0</div>
+          <div class="text-gray-400 text-sm mt-1">إجمالي المستخدمين</div>
+        </div>
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-folder text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-projects">0</div>
+          <div class="text-gray-400 text-sm mt-1">المشاريع المحفوظة</div>
+        </div>
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-crown text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-pro">0</div>
+          <div class="text-gray-400 text-sm mt-1">مشتركين Pro</div>
+        </div>
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-dollar-sign text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-revenue">$0</div>
+          <div class="text-gray-400 text-sm mt-1">الإيرادات الشهرية</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-6 mb-6">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <i class="fas fa-clock text-purple-400"></i> آخر المستخدمين المسجلين
+        </h3>
+        <div id="recent-users" class="space-y-3">
+          <p class="text-gray-400 text-center py-8">جاري التحميل...</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass rounded-2xl p-6">
+          <h3 class="text-xl font-bold mb-4">توزيع الخطط</h3>
+          <div id="plans-chart" class="space-y-4"></div>
+        </div>
+        <div class="glass rounded-2xl p-6">
+          <h3 class="text-xl font-bold mb-4">النشاط الأخير</h3>
+          <div id="activity-log" class="space-y-3 max-h-64 overflow-y-auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="content-users" class="tab-content" style="display:none">
+      <div class="glass rounded-2xl p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold">إدارة المستخدمين</h3>
+          <input type="text" id="search-users" placeholder="🔍 بحث..." class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700" oninput="Admin.searchUsers(this.value)">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-700 text-right">
+                <th class="p-3">المستخدم</th>
+                <th class="p-3">البريد</th>
+                <th class="p-3">الخطة</th>
+                <th class="p-3">الحالة</th>
+                <th class="p-3">تاريخ التسجيل</th>
+                <th class="p-3">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="users-table">
+              <tr><td colspan="6" class="text-center py-8 text-gray-400">جاري التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="content-projects" class="tab-content" style="display:none">
+      <div class="glass rounded-2xl p-6">
+        <h3 class="text-xl font-bold mb-6">جميع المشاريع المحفوظة</h3>
+        <div id="projects-list" class="space-y-3">
+          <p class="text-center py-8 text-gray-400">جاري التحميل...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="content-settings" class="tab-content" style="display:none">
+      <div class="glass rounded-2xl p-6 mb-6">
+        <h3 class="text-xl font-bold mb-4">إعدادات الموقع</h3>
+        <div class="space-y-4">
+          <div><label class="block mb-2">اسم الموقع</label><input type="text" value="AudioPro Studio" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700"></div>
+          <div><label class="block mb-2">وصف الموقع</label><input type="text" value="استوديو الصوت الاحترافي" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700"></div>
+          <div><label class="block mb-2">البريد الرسمي</label><input type="email" value="admin@audiopro.com" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700"></div>
+          <button class="gradient-btn px-6 py-3 rounded-xl">حفظ الإعدادات</button>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <h3 class="text-xl font-bold mb-4">إدارة قاعدة البيانات</h3>
+        <div class="flex gap-3">
+          <button onclick="Admin.exportData()" class="gradient-btn px-6 py-3 rounded-xl"><i class="fas fa-download ml-2"></i> تصدير البيانات</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="fixed top-6 left-6 z-[200]"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCznJN1dZP4B4lqpX0YVxjNVG5NfpYu8sI",
+  authDomain: "audiopro-studio.firebaseapp.com",
+  projectId: "audiopro-studio",
+  storageBucket: "audiopro-studio.firebasestorage.app",
+  messagingSenderId: "684940159867",
+  appId: "1:684940159867:web:58ce24e2d970e5ec0eebde"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const DEVELOPER_CODE = "ADMIN2026";
+
+const AdminAuth = {
+  async login(e) {
+    e.preventDefault();
+    const email = document.getElementById('admin-email').value;
+    const password = document.getElementById('admin-password').value;
+    const code = document.getElementById('admin-code').value;
+
+    if (code !== DEVELOPER_CODE) {
+      this.toast('❌ رمز المطور غير صحيح', 'error');
+      return;
+    }
+
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      this.toast('✅ تم تسجيل الدخول بنجاح', 'success');
+      document.getElementById('admin-login').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      document.getElementById('admin-name').textContent = email;
+      Admin.loadDashboard();
+    } catch (err) {
+      this.toast('❌ ' + err.message, 'error');
+    }
+  },
+
+  async logout() {
+    await auth.signOut();
+    document.getElementById('admin-login').style.display = 'flex';
+    document.getElementById('admin-panel').style.display = 'none';
+  },
+
+  toast(msg, type) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+};
+
+const Admin = {
+  allUsers: [],
+
+  showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.getElementById(`content-${tabName}`).style.display = 'block';
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.remove('tab-active'));
+    document.getElementById(`tab-${tabName}`).classList.add('tab-active');
+
+    const titles = {
+      dashboard: 'لوحة التحكم',
+      users: 'إدارة المستخدمين',
+      projects: 'المشاريع المحفوظة',
+      settings: 'الإعدادات'
+    };
+    document.getElementById('page-title').textContent = titles[tabName];
+
+    if (tabName === 'users') this.loadUsers();
+    if (tabName === 'projects') this.loadProjects();
+  },
+
+  async loadDashboard() {
+    try {
+      const usersSnap = await db.collection('users').get();
+      const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      this.allUsers = users;
+
+      document.getElementById('stat-users').textContent = users.length;
+
+      const proUsers = users.filter(u => u.plan === 'pro' || u.plan === 'studio');
+      document.getElementById('stat-pro').textContent = proUsers.length;
+
+      const revenue = proUsers.reduce((sum, u) => sum + (u.plan === 'pro' ? 9.99 : 24.99), 0);
+      document.getElementById('stat-revenue').textContent = '$' + revenue.toFixed(2);
+
+      const recent = [...users].sort((a, b) => {
+        const aTime = a.createdAt?.toMillis?.() || 0;
+        const bTime = b.createdAt?.toMillis?.() || 0;
+        return bTime - aTime;
+      }).slice(0, 5);
+
+      const recentHtml = recent.map(u => `
+        <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 gradient-btn rounded-full flex items-center justify-center">
+              <i class="fas fa-user"></i>
+            </div>
+            <div>
+              <div class="font-bold">${u.name || 'مستخدم'}</div>
+              <div class="text-sm text-gray-400">${u.email || '-'}</div>
+            </div>
+          </div>
+          <span class="badge badge-${u.plan || 'free'}">${u.plan || 'free'}</span>
+        </div>
+      `).join('');
+      document.getElementById('recent-users').innerHTML = recentHtml || '<p class="text-gray-400 text-center">لا يوجد مستخدمين بعد</p>';
+
+      const freeCount = users.filter(u => u.plan === 'free' || !u.plan).length;
+      const proCount = users.filter(u => u.plan === 'pro').length;
+      const studioCount = users.filter(u => u.plan === 'studio').length;
+      const total = users.length || 1;
+
+      document.getElementById('plans-chart').innerHTML = `
+        <div>
+          <div class="flex justify-between mb-1"><span>مجاني</span><span>${freeCount} (${Math.round(freeCount/total*100)}%)</span></div>
+          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:${freeCount/total*100}%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1"><span>احترافي</span><span>${proCount} (${Math.round(proCount/total*100)}%)</span></div>
+          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full" style="width:${proCount/total*100}%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1"><span>استوديو</span><span>${studioCount} (${Math.round(studioCount/total*100)}%)</span></div>
+          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-purple-500 h-2 rounded-full" style="width:${studioCount/total*100}%"></div></div>
+        </div>
+      `;
+
+      document.getElementById('activity-log').innerHTML = `
+        <div class="flex items-center gap-3 p-2"><i class="fas fa-circle text-green-400 text-xs"></i><span class="text-sm">تم تحميل لوحة التحكم</span><span class="text-xs text-gray-500 mr-auto">الآن</span></div>
+        <div class="flex items-center gap-3 p-2"><i class="fas fa-user-plus text-blue-400 text-xs"></i><span class="text-sm">${users.length} مستخدم مسجل</span><span class="text-xs text-gray-500 mr-auto">إجمالي</span></div>
+        <div class="flex items-center gap-3 p-2"><i class="fas fa-crown text-yellow-400 text-xs"></i><span class="text-sm">${proUsers.length} مشترك مدفوع</span><span class="text-xs text-gray-500 mr-auto">نشط</span></div>
+      `;
+
+    } catch (err) {
+      console.error(err);
+      AdminAuth.toast('خطأ في تحميل البيانات', 'error');
+    }
+  },
+
+  async loadUsers() {
+    const tbody = document.getElementById('users-table');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">جاري التحميل...</td></tr>';
+
+    try {
+      const snap = await db.collection('users').get();
+      const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      tbody.innerHTML = users.map(u => `
+        <tr class="table-row border-b border-slate-800">
+          <td class="p-3">${u.name || '-'}</td>
+          <td class="p-3 text-sm">${u.email || '-'}</td>
+          <td class="p-3"><span class="badge badge-${u.plan || 'free'}">${u.plan || 'free'}</span></td>
+          <td class="p-3"><span class="badge badge-active">نشط</span></td>
+          <td class="p-3 text-sm text-gray-400">${u.createdAt?.toDate?.().toLocaleDateString('ar') || '-'}</td>
+          <td class="p-3">
+            <button onclick="Admin.changePlan('${u.id}', 'pro')" class="text-yellow-400 hover:text-yellow-300 ml-2" title="ترقية"><i class="fas fa-crown"></i></button>
+            <button onclick="Admin.deleteUser('${u.id}')" class="text-red-500 hover:text-red-400" title="حذف"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-red-400">خطأ في التحميل</td></tr>';
+    }
+  },
+
+  searchUsers(query) {
+    const rows = document.querySelectorAll('#users-table tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+    });
+  },
+
+  async changePlan(userId, plan) {
+    try {
+      await db.collection('users').doc(userId).update({ plan: plan });
+      AdminAuth.toast(`تم ترقية المستخدم إلى ${plan}`, 'success');
+      this.loadUsers();
+    } catch (err) { AdminAuth.toast('خطأ', 'error'); }
+  },
+
+  async deleteUser(userId) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    try {
+      await db.collection('users').doc(userId).delete();
+      AdminAuth.toast('تم حذف المستخدم', 'success');
+      this.loadUsers();
+      this.loadDashboard();
+    } catch (err) { AdminAuth.toast('خطأ', 'error'); }
+  },
+
+  async loadProjects() {
+    const container = document.getElementById('projects-list');
+    container.innerHTML = '<p class="text-center py-8">جاري التحميل...</p>';
+
+    try {
+      const usersSnap = await db.collection('users').get();
+      let allProjects = [];
+
+      for (const userDoc of usersSnap.docs) {
+        const projectsSnap = await userDoc.ref.collection('projects').get();
+        projectsSnap.docs.forEach(p => {
+          allProjects.push({ id: p.id, userId: userDoc.id, ...p.data() });
+        });
+      }
+
+      document.getElementById('stat-projects').textContent = allProjects.length;
+
+      if (allProjects.length === 0) {
+        container.innerHTML = '<p class="text-center py-8 text-gray-400">لا توجد مشاريع بعد</p>';
+        return;
+      }
+
+      container.innerHTML = allProjects.map(p => `
+        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <i class="fas fa-music"></i>
+            </div>
+            <div>
+              <div class="font-bold">${p.name || 'مشروع'}</div>
+              <div class="text-sm text-gray-400">${(p.size/1024/1024).toFixed(2)} MB • ${p.createdAt?.toDate?.().toLocaleDateString('ar') || '-'}</div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <a href="${p.url}" target="_blank" class="text-blue-400 hover:text-blue-300"><i class="fas fa-download"></i></a>
+            <button onclick="Admin.deleteProject('${p.userId}', '${p.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      container.innerHTML = '<p class="text-center py-8 text-red-400">خطأ في التحميل</p>';
+    }
+  },
+
+  async deleteProject(userId, projectId) {
+    if (!confirm('حذف هذا المشروع؟')) return;
+    try {
+      await db.collection('users').doc(userId).collection('projects').doc(projectId).delete();
+      AdminAuth.toast('تم الحذف', 'success');
+      this.loadProjects();
+    } catch (err) { AdminAuth.toast('خطأ', 'error'); }
+  },
+
+  refreshData() {
+    this.loadDashboard();
+    AdminAuth.toast('تم التحديث', 'success');
+  },
+
+  exportData() {
+    const data = JSON.stringify(this.allUsers, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audiopro_users_${Date.now()}.json`;
+    a.click();
+    AdminAuth.toast('تم تصدير البيانات', 'success');
+  }
+};
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    document.getElementById('admin-name').textContent = user.email;
+    Admin.loadDashboard();
+  }
+});
+</script>
+</body>
+</html>
