@@ -16,7 +16,6 @@ body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); min-heigh
 .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
 .gradient-btn { background: linear-gradient(135deg, #667eea, #764ba2); transition: all 0.3s; }
 .gradient-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
-.glow { box-shadow: 0 0 60px rgba(102,126,234,0.3); }
 .page { display: none; }
 .page.active { display: block; }
 input, select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; }
@@ -34,6 +33,7 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
 .plan-card:hover { transform: translateY(-10px); }
 .popular { border: 2px solid #667eea; position: relative; }
 .popular::before { content: 'الأكثر شعبية'; position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+.feature-icon { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -47,6 +47,7 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
   </div>
 </div>
 
+<!-- الصفحة الرئيسية -->
 <div id="home" class="page active">
   <nav class="glass sticky top-0 z-50 px-6 py-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -79,19 +80,82 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
       <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-wand-magic-sparkles text-2xl"></i></div><h3 class="text-xl font-bold mb-2">إزالة الضوضاء AI</h3><p class="text-gray-300">تنقية صوتك من أي ضوضاء خلفية</p></div>
       <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-music text-2xl"></i></div><h3 class="text-xl font-bold mb-2">مؤثرات احترافية</h3><p class="text-gray-300">صدى، إيكو، ديلay، وأكثر</p></div>
       <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-bolt text-2xl"></i></div><h3 class="text-xl font-bold mb-2">معالجة فورية</h3><p class="text-gray-300">نتائج فورية بجودة استوديو</p></div>
+      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-microphone-lines text-2xl"></i></div><h3 class="text-xl font-bold mb-2">إزالة الموسيقى</h3><p class="text-gray-300">فصل الصوت عن الموسيقى</p></div>
+      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-robot text-2xl"></i></div><h3 class="text-xl font-bold mb-2">استنساخ الصوت</h3><p class="text-gray-300">نسخ صوتك بالذكاء الاصطناعي</p></div>
+      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-sliders text-2xl"></i></div><h3 class="text-xl font-bold mb-2">مغير الصوت</h3><p class="text-gray-300">تغيير نبرة وطبقة الصوت</p></div>
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-6 py-20">
-    <h2 class="text-4xl font-bold text-center mb-12">خطط الاشتراك</h2>
+  <section id="pricing" class="max-w-7xl mx-auto px-6 py-20">
+    <h2 class="text-4xl font-bold text-center mb-4">خطط الاشتراك</h2>
+    <p class="text-center text-gray-300 mb-12">اختر الخطة المناسبة لك</p>
     <div class="grid md:grid-cols-3 gap-6">
-      <div class="plan-card glass p-8 rounded-2xl"><h3 class="text-2xl font-bold mb-2">مجاني</h3><div class="text-4xl font-black mb-6">0$<span class="text-lg text-gray-400">/شهر</span></div><ul class="space-y-3 mb-8"><li><i class="fas fa-check text-green-400 ml-2"></i>5 دقائق شهرياً</li><li><i class="fas fa-check text-green-400 ml-2"></i>جودة قياسية</li></ul><button onclick="Auth.showRegister()" class="w-full glass py-3 rounded-xl font-bold hover:bg-white/10">ابدأ الآن</button></div>
-      <div class="plan-card popular glass p-8 rounded-2xl"><h3 class="text-2xl font-bold mb-2">احترافي</h3><div class="text-4xl font-black mb-6">9.99$<span class="text-lg text-gray-400">/شهر</span></div><ul class="space-y-3 mb-8"><li><i class="fas fa-check text-green-400 ml-2"></i>5 ساعات شهرياً</li><li><i class="fas fa-check text-green-400 ml-2"></i>جودة عالية</li><li><i class="fas fa-check text-green-400 ml-2"></i>جميع المؤثرات</li></ul><button onclick="Auth.showRegister()" class="w-full gradient-btn py-3 rounded-xl font-bold">اشترك الآن</button></div>
-      <div class="plan-card glass p-8 rounded-2xl"><h3 class="text-2xl font-bold mb-2">استوديو</h3><div class="text-4xl font-black mb-6">24.99$<span class="text-lg text-gray-400">/شهر</span></div><ul class="space-y-3 mb-8"><li><i class="fas fa-check text-green-400 ml-2"></i>غير محدود</li><li><i class="fas fa-check text-green-400 ml-2"></i>جودة WAV/FLAC</li><li><i class="fas fa-check text-green-400 ml-2"></i>API access</li></ul><button onclick="Auth.showRegister()" class="w-full glass py-3 rounded-xl font-bold hover:bg-white/10">اشترك الآن</button></div>
+      <div class="plan-card glass p-8 rounded-2xl">
+        <h3 class="text-2xl font-bold mb-2">مجاني</h3>
+        <div class="text-4xl font-black mb-6">0$<span class="text-lg text-gray-400">/شهر</span></div>
+        <ul class="space-y-3 mb-8 text-right">
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>5 دقائق شهرياً</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جودة قياسية 128kbps</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>إزالة ضوضاء أساسية</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>3 مؤثرات صوتية</li>
+        </ul>
+        <button onclick="Plans.showDetails('free')" class="w-full glass py-3 rounded-xl font-bold hover:bg-white/10">ابدأ الآن</button>
+      </div>
+      <div class="plan-card popular glass p-8 rounded-2xl">
+        <h3 class="text-2xl font-bold mb-2">احترافي</h3>
+        <div class="text-4xl font-black mb-6">9.99$<span class="text-lg text-gray-400">/شهر</span></div>
+        <ul class="space-y-3 mb-8 text-right">
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>5 ساعات شهرياً</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جودة عالية 320kbps</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>إزالة ضوضاء بـ AI</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جميع المؤثرات</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>بدون علامة مائية</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>إزالة الموسيقى</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>مغير الصوت المتقدم</li>
+        </ul>
+        <button onclick="Plans.showDetails('pro')" class="w-full gradient-btn py-3 rounded-xl font-bold">اشترك الآن</button>
+      </div>
+      <div class="plan-card glass p-8 rounded-2xl">
+        <h3 class="text-2xl font-bold mb-2">استوديو</h3>
+        <div class="text-4xl font-black mb-6">24.99$<span class="text-lg text-gray-400">/شهر</span></div>
+        <ul class="space-y-3 mb-8 text-right">
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>استخدام غير محدود</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جودة WAV/FLAC</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جميع ميزات Pro</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>استنساخ الصوت AI</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>API access</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>50GB تخزين سحابي</li>
+          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>دعم فني 24/7</li>
+        </ul>
+        <button onclick="Plans.showDetails('studio')" class="w-full glass py-3 rounded-xl font-bold hover:bg-white/10">اشترك الآن</button>
+      </div>
     </div>
   </section>
 </div>
 
+<!-- صفحة تفاصيل الخطة -->
+<div id="plan-details" class="page">
+  <nav class="glass sticky top-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <button onclick="App.showPage('home')" class="flex items-center gap-2 text-gray-300 hover:text-white transition">
+        <i class="fas fa-arrow-right"></i>
+        <span>العودة للرئيسية</span>
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center"><i class="fas fa-waveform-lines"></i></div>
+        <span class="text-2xl font-bold">AudioPro</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-4xl mx-auto px-6 py-20">
+    <div id="plan-content" class="glass rounded-3xl p-10">
+      <!-- سيتم ملء المحتوى ديناميكياً -->
+    </div>
+  </div>
+</div>
+
+<!-- صفحة التسجيل -->
 <div id="auth-page" class="page">
   <div class="min-h-screen flex items-center justify-center p-6">
     <div class="glass rounded-3xl p-10 max-w-md w-full glow">
@@ -111,15 +175,6 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
         <input type="password" id="user-password" class="w-full px-4 py-3 rounded-xl mb-4" placeholder="كلمة المرور (6+ أحرف)" required minlength="6">
         <button type="submit" class="w-full gradient-btn py-4 rounded-xl font-bold"><span id="auth-btn-text">تسجيل الدخول</span></button>
       </form>
-      <form id="phone-form" onsubmit="Auth.sendOTP(event)" style="display:none">
-        <div class="mb-4"><label class="block mb-2 text-sm">رقم الجوال مع رمز الدولة</label><input type="tel" id="user-phone" class="w-full px-4 py-3 rounded-xl" placeholder="+966501234567" required></div>
-        <button type="submit" class="w-full gradient-btn py-4 rounded-xl font-bold"><i class="fas fa-paper-plane ml-1"></i> إرسال رمز التحقق</button>
-      </form>
-      <form id="otp-form" onsubmit="Auth.verifyOTP(event)" style="display:none">
-        <p class="text-center text-gray-300 mb-4">أدخل الرمز المرسل إلى جوالك</p>
-        <input type="text" id="otp-code" class="w-full px-4 py-3 rounded-xl mb-4 text-center text-2xl tracking-widest" placeholder="• • • • • •" maxlength="6" required>
-        <button type="submit" class="w-full gradient-btn py-4 rounded-xl font-bold">تأكيد</button>
-      </form>
       <div class="flex items-center gap-3 my-6"><div class="flex-1 h-px bg-white/20"></div><span class="text-gray-400 text-sm">أو</span><div class="flex-1 h-px bg-white/20"></div></div>
       <div class="grid grid-cols-3 gap-3">
         <button onclick="Auth.socialLogin('google')" class="glass py-3 rounded-xl hover:bg-white/10"><i class="fab fa-google"></i></button>
@@ -131,6 +186,7 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
   </div>
 </div>
 
+<!-- لوحة التحكم -->
 <div id="dashboard" class="page">
   <nav class="glass sticky top-0 z-50 px-6 py-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -172,6 +228,12 @@ input:focus, select:focus { outline: none; border-color: #667eea; }
         <div class="glass rounded-2xl p-6">
           <h3 class="text-xl font-bold mb-4"><i class="fas fa-wand-magic-sparkles text-purple-400"></i> المؤثرات</h3>
           <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2" id="effects-container"></div>
+          <div class="mt-4 pt-4 border-t border-white/10">
+            <h4 class="font-bold mb-3 text-sm text-purple-300">الميزات المتقدمة</h4>
+            <button onclick="AudioEngine.removeMusic()" class="w-full glass py-2 rounded-lg mb-2 hover:bg-white/10 text-sm"><i class="fas fa-microphone-lines ml-1"></i> إزالة الموسيقى</button>
+            <button onclick="AudioEngine.voiceChanger()" class="w-full glass py-2 rounded-lg mb-2 hover:bg-white/10 text-sm"><i class="fas fa-sliders ml-1"></i> مغير الصوت</button>
+            <button onclick="AudioEngine.cloneVoice()" class="w-full glass py-2 rounded-lg hover:bg-white/10 text-sm"><i class="fas fa-robot ml-1"></i> استنساخ الصوت</button>
+          </div>
           <button onclick="Effects.autoEnhance()" class="w-full gradient-btn py-3 rounded-xl font-bold mt-4"><i class="fas fa-sparkles"></i> تحسين AI تلقائي</button>
         </div>
         <div class="glass rounded-2xl p-6">
@@ -219,145 +281,53 @@ const CONFIG = {
     appId: "1:684940159867:web:58ce24e2d970e5ec0eebde"
   },
   plans: {
-    free: { name: "مجاني", price: 0, minutes: 5, quality: "128kbps" },
-    pro: { name: "احترافي", price: 9.99, minutes: 300, quality: "320kbps" },
-    studio: { name: "استوديو", price: 24.99, minutes: -1, quality: "Lossless" }
+    free: { name: "مجاني", price: 0, minutes: 5, quality: "128kbps", features: ["5 دقائق شهرياً", "جودة قياسية 128kbps", "إزالة ضوضاء أساسية", "3 مؤثرات صوتية"] },
+    pro: { name: "احترافي", price: 9.99, minutes: 300, quality: "320kbps", features: ["5 ساعات شهرياً", "جودة عالية 320kbps", "إزالة ضوضاء بـ AI", "جميع المؤثرات", "بدون علامة مائية", "إزالة الموسيقى", "مغير الصوت المتقدم"] },
+    studio: { name: "استوديو", price: 24.99, minutes: -1, quality: "Lossless", features: ["استخدام غير محدود", "جودة WAV/FLAC", "جميع ميزات Pro", "استنساخ الصوت AI", "API access", "50GB تخزين سحابي", "دعم فني 24/7"] }
   }
 };
 firebase.initializeApp(CONFIG.firebase);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ============ IndexedDB (تخزين محلي) ============
-const LocalDB = {
-  dbName: 'AudioProDB',
-  storeName: 'projects',
-  db: null,
+// ============ Plans ============
+const Plans = {
+  showDetails(planId) {
+    const plan = CONFIG.plans[planId];
+    if (!plan) return;
 
-  init() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, 1);
-      request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
-        }
-      };
-      request.onsuccess = (e) => { this.db = e.target.result; resolve(); };
-      request.onerror = (e) => reject(e);
-    });
-  },
-
-  async saveProject() {
-    if (!AudioEngine.buffer) { App.toast('لا يوجد ملف للحفظ', 'error'); return; }
-    if (!Auth.currentUser) { App.toast('سجل دخولك أولاً', 'error'); return; }
-    try {
-      App.showLoading(true);
-      await this.init();
-      const wav = AudioEngine.bufferToWav(AudioEngine.buffer);
-      const project = {
-        userId: Auth.currentUser.uid,
-        name: AudioEngine.fileName,
-        data: wav,
-        size: wav.byteLength,
-        createdAt: new Date().toISOString()
-      };
-      const tx = this.db.transaction(this.storeName, 'readwrite');
-      const store = tx.objectStore(this.storeName);
-      await new Promise((resolve, reject) => {
-        const req = store.add(project);
-        req.onsuccess = resolve;
-        req.onerror = reject;
-      });
-      App.toast('✅ تم الحفظ محلياً!', 'success');
-      this.loadProjects();
-    } catch (err) { App.toast('خطأ في الحفظ', 'error'); } finally { App.showLoading(false); }
-  },
-
-  async loadProjects() {
-    if (!Auth.currentUser) return;
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readonly');
-    const store = tx.objectStore(this.storeName);
-    const all = await new Promise((resolve) => {
-      const req = store.getAll();
-      req.onsuccess = () => resolve(req.result);
-    });
-    const userProjects = all.filter(p => p.userId === Auth.currentUser.uid);
-    const container = document.getElementById('my-projects');
-    if (userProjects.length === 0) {
-      container.innerHTML = '<p class="text-gray-400 text-center py-4">لا توجد مشاريع محفوظة</p>';
-      return;
-    }
-    container.innerHTML = userProjects.map(p => `
-      <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 gradient-btn rounded-lg flex items-center justify-center"><i class="fas fa-music"></i></div>
-          <div>
-            <div class="font-bold">${p.name}</div>
-            <div class="text-sm text-gray-400">${(p.size/1024/1024).toFixed(2)} MB • ${new Date(p.createdAt).toLocaleDateString('ar')}</div>
-          </div>
+    const content = document.getElementById('plan-content');
+    content.innerHTML = `
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-crown text-3xl"></i>
         </div>
-        <div class="flex gap-2">
-          <button onclick="LocalDB.loadProject(${p.id})" class="text-blue-400 hover:text-blue-300"><i class="fas fa-play"></i> تشغيل</button>
-          <button onclick="LocalDB.downloadProject(${p.id})" class="text-green-400 hover:text-green-300"><i class="fas fa-download"></i> تحميل</button>
-          <button onclick="LocalDB.deleteProject(${p.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
-        </div>
+        <h2 class="text-4xl font-bold mb-2">${plan.name}</h2>
+        <div class="text-5xl font-black mb-4">$${plan.price}<span class="text-2xl text-gray-400">/شهر</span></div>
+        ${plan.minutes === -1 ? '<span class="badge bg-green-500/20 text-green-400 px-4 py-1 rounded-full">غير محدود</span>' : `<span class="text-gray-300">${plan.minutes} دقيقة شهرياً</span>`}
       </div>
-    `).join('');
-  },
+      <div class="mb-8">
+        <h3 class="text-xl font-bold mb-4">المميزات:</h3>
+        <ul class="space-y-3">
+          ${plan.features.map(f => `
+            <li class="flex items-center p-3 bg-white/5 rounded-xl">
+              <i class="fas fa-check-circle text-green-400 ml-3 text-xl"></i>
+              <span>${f}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+      <div class="flex gap-4">
+        <button onclick="Auth.showRegister()" class="flex-1 gradient-btn py-4 rounded-xl font-bold text-lg">
+          <i class="fas fa-rocket ml-2"></i> ابدأ الآن
+        </button>
+        <button onclick="App.showPage('home')" class="flex-1 glass py-4 rounded-xl font-bold text-lg hover:bg-white/10">
+          <i class="fas fa-arrow-right ml-2"></i> العودة للرئيسية
+        </button>
+      </div>
+    `;
 
-  async loadProject(id) {
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readonly');
-    const store = tx.objectStore(this.storeName);
-    const project = await new Promise((resolve) => {
-      const req = store.get(id);
-      req.onsuccess = () => resolve(req.result);
-    });
-    if (project) {
-      AudioEngine.fileName = project.name;
-      AudioEngine.buffer = await AudioEngine.ctx.decodeAudioData(project.data.slice(0));
-      document.getElementById('file-name').textContent = project.name;
-      document.getElementById('file-info').textContent = `${(project.size/1024/1024).toFixed(2)} MB`;
-      document.getElementById('upload-area').style.display = 'none';
-      document.getElementById('editor').style.display = 'block';
-      AudioEngine.setupGraph();
-      AudioEngine.drawWaveform();
-      Effects.init();
-      App.initVisualizer();
-      App.toast('تم تحميل المشروع', 'success');
-    }
-  },
-
-  async downloadProject(id) {
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readonly');
-    const store = tx.objectStore(this.storeName);
-    const project = await new Promise((resolve) => {
-      const req = store.get(id);
-      req.onsuccess = () => resolve(req.result);
-    });
-    if (project) {
-      const blob = new Blob([project.data], { type: 'audio/wav' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = project.name; a.click();
-      URL.revokeObjectURL(url);
-    }
-  },
-
-  async deleteProject(id) {
-    if (!confirm('حذف هذا المشروع؟')) return;
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readwrite');
-    const store = tx.objectStore(this.storeName);
-    await new Promise((resolve) => {
-      const req = store.delete(id);
-      req.onsuccess = resolve;
-    });
-    App.toast('تم الحذف', 'success');
-    this.loadProjects();
+    App.showPage('plan-details');
   }
 };
 
@@ -489,30 +459,6 @@ const Auth = {
       }
     } catch (err) { App.toast('❌ ' + this.translateError(err.code), 'error'); } finally { App.showLoading(false); }
   },
-  async sendOTP(e) {
-    e.preventDefault();
-    const phone = document.getElementById('user-phone').value;
-    try {
-      App.showLoading(true);
-      const recaptcha = new firebase.auth.RecaptchaVerifier('auth-btn-text', { size: 'invisible' });
-      this.confirmationResult = await auth.signInWithPhoneNumber(phone, recaptcha);
-      document.getElementById('phone-form').style.display = 'none';
-      document.getElementById('otp-form').style.display = 'block';
-      App.toast('📱 تم إرسال رمز التحقق', 'success');
-    } catch (err) { App.toast('❌ ' + this.translateError(err.code), 'error'); } finally { App.showLoading(false); }
-  },
-  async verifyOTP(e) {
-    e.preventDefault();
-    const code = document.getElementById('otp-code').value;
-    try {
-      App.showLoading(true);
-      const result = await this.confirmationResult.confirm(code);
-      if (!(await db.collection('users').doc(result.user.uid).get()).exists) {
-        await db.collection('users').doc(result.user.uid).set({ phone: result.user.phoneNumber, plan: 'free', createdAt: firebase.firestore.FieldValue.serverTimestamp(), usageMinutes: 0 });
-      }
-      App.toast('✅ تم التحقق بنجاح!', 'success');
-    } catch (err) { App.toast('❌ رمز غير صحيح', 'error'); } finally { App.showLoading(false); }
-  },
   async socialLogin(provider) {
     try {
       App.showLoading(true);
@@ -545,7 +491,7 @@ const Auth = {
 // ============ Audio Engine ============
 const AudioEngine = {
   ctx: null, source: null, buffer: null, fileName: '', isPlaying: false, startTime: 0, pauseTime: 0,
-  nodes: { input: null, noiseGate: null, highpass: null, lowpass: null, compressor: null, eq: [], reverb: null, reverbGain: null, delay: null, delayFeedback: null, delayGain: null, chorus: null, flanger: null, gain: null, analyser: null },
+  nodes: { input: null, noiseGate: null, highpass: null, lowpass: null, compressor: null, eq: [], reverb: null, reverbGain: null, delay: null, delayFeedback: null, delayGain: null, chorus: null, flanger: null, gain: null, analyser: null, pitchShifter: null },
   animationId: null, dataArray: null,
   init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
   async handleFile(event) {
@@ -678,6 +624,43 @@ const AudioEngine = {
       ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp));
     }
   },
+  
+  // ميزة إزالة الموسيقى (Vocal Isolation)
+  removeMusic() {
+    App.toast('🎵 جاري إزالة الموسيقى... (تتطلب معالجة AI)', 'info');
+    setTimeout(() => {
+      App.toast('⚠️ هذه الميزة تتطلب Backend مع نموذج AI متقدم لفصل الصوت عن الموسيقى. للمعالجة الكاملة، نوصي باستخدام خدمات مثل Spleeter أو Demucs.', 'error');
+    }, 1500);
+  },
+  
+  // ميزة مغير الصوت (Voice Changer)
+  voiceChanger() {
+    const pitch = prompt('أدخل قيمة تغيير الطبقة (-12 إلى +12):\n-12: صوت عميق جداً\n0: طبيعي\n+12: صوت حاد جداً', '0');
+    if (pitch !== null) {
+      const pitchValue = parseFloat(pitch);
+      if (!isNaN(pitchValue) && pitchValue >= -12 && pitchValue <= 12) {
+        // تطبيق تغيير الطبقة
+        const playbackRate = Math.pow(2, pitchValue / 12);
+        if (this.nodes.input) {
+          this.nodes.input.playbackRate.value = playbackRate;
+          App.toast(`🎤 تم تغيير الطبقة إلى ${pitchValue}`, 'success');
+        } else {
+          App.toast('❌ ارفع ملفاً صوتياً أولاً', 'error');
+        }
+      } else {
+        App.toast('❌ قيمة غير صحيحة. استخدم رقم بين -12 و +12', 'error');
+      }
+    }
+  },
+  
+  // ميزة استنساخ الصوت (Voice Cloning)
+  cloneVoice() {
+    App.toast('🤖 استنساخ الصوت...', 'info');
+    setTimeout(() => {
+      App.toast('⚠️ استنساخ الصوت يتطلب:\n1. Backend مع نموذج AI (مثل Tacotron أو FastSpeech)\n2. عينة صوتية للتدريب (5-10 دقائق)\n3. معالجة سحابية قوية\n\nلتنفيذ هذه الميزة، نوصي باستخدام خدمات مثل:\n- ElevenLabs API\n- Resemble AI\n- Descript', 'error');
+    }, 1500);
+  },
+  
   async export() {
     if (!this.buffer) return;
     App.showLoading(true); App.toast('⏳ جاري معالجة الملف...', 'info');
@@ -731,17 +714,17 @@ const Effects = {
     { id: 'lowpass', name: '🔉 Low-Pass Filter', min: 2000, max: 20000, value: 12000, unit: 'Hz' },
     { id: 'compressor', name: '📊 Compressor', min: -60, max: 0, value: -24, unit: 'dB' },
     { id: 'eq_bass', name: '🎚️ EQ Bass (60Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_lowmid', name: '️ EQ Low-Mid (250Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
+    { id: 'eq_lowmid', name: '🎚️ EQ Low-Mid (250Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
     { id: 'eq_mid', name: '🎚️ EQ Mid (1kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_highmid', name: '️ EQ High-Mid (4kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
+    { id: 'eq_highmid', name: '🎚️ EQ High-Mid (4kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
     { id: 'eq_treble', name: '🎚️ EQ Treble (12kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'reverb', name: '️ الصدى (Reverb)', min: 0, max: 100, value: 0, unit: '%' },
+    { id: 'reverb', name: '🏛️ الصدى (Reverb)', min: 0, max: 100, value: 0, unit: '%' },
     { id: 'delay', name: '⏱️ التأخير (Delay)', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'delayTime', name: ' Delay Time', min: 0.1, max: 1, value: 0.3, step: 0.01, unit: 's' },
+    { id: 'delayTime', name: '⏰ Delay Time', min: 0.1, max: 1, value: 0.3, step: 0.01, unit: 's' },
     { id: 'delayFeedback', name: '🔁 Delay Feedback', min: 0, max: 90, value: 30, unit: '%' },
     { id: 'chorus', name: '🎵 Chorus', min: 0, max: 100, value: 0, unit: '%' },
     { id: 'flanger', name: '🌊 Flanger', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'volume', name: ' مستوى الصوت', min: 0, max: 200, value: 100, unit: '%' }
+    { id: 'volume', name: '🔊 مستوى الصوت', min: 0, max: 200, value: 100, unit: '%' }
   ],
   init() {
     const container = document.getElementById('effects-container');
@@ -784,6 +767,133 @@ const Effects = {
     App.toast('✨ تم تطبيق التحسين التلقائي بالذكاء الاصطناعي!', 'success');
   },
   resetAll() { this.list.forEach(effect => { const slider = document.getElementById(`${effect.id}-slider`); if (slider) { slider.value = effect.value; this.update(effect.id, effect.value); } }); }
+};
+
+// ============ IndexedDB (تخزين محلي) ============
+const LocalDB = {
+  dbName: 'AudioProDB',
+  storeName: 'projects',
+  db: null,
+  init() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
+        }
+      };
+      request.onsuccess = (e) => { this.db = e.target.result; resolve(); };
+      request.onerror = (e) => reject(e);
+    });
+  },
+  async saveProject() {
+    if (!AudioEngine.buffer) { App.toast('لا يوجد ملف للحفظ', 'error'); return; }
+    if (!Auth.currentUser) { App.toast('سجل دخولك أولاً', 'error'); return; }
+    try {
+      App.showLoading(true);
+      await this.init();
+      const wav = AudioEngine.bufferToWav(AudioEngine.buffer);
+      const project = {
+        userId: Auth.currentUser.uid,
+        name: AudioEngine.fileName,
+        data: wav,
+        size: wav.byteLength,
+        createdAt: new Date().toISOString()
+      };
+      const tx = this.db.transaction(this.storeName, 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      await new Promise((resolve, reject) => {
+        const req = store.add(project);
+        req.onsuccess = resolve;
+        req.onerror = reject;
+      });
+      App.toast('✅ تم الحفظ محلياً!', 'success');
+      this.loadProjects();
+    } catch (err) { App.toast('خطأ في الحفظ', 'error'); } finally { App.showLoading(false); }
+  },
+  async loadProjects() {
+    if (!Auth.currentUser) return;
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readonly');
+    const store = tx.objectStore(this.storeName);
+    const all = await new Promise((resolve) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result);
+    });
+    const userProjects = all.filter(p => p.userId === Auth.currentUser.uid);
+    const container = document.getElementById('my-projects');
+    if (userProjects.length === 0) {
+      container.innerHTML = '<p class="text-gray-400 text-center py-4">لا توجد مشاريع محفوظة</p>';
+      return;
+    }
+    container.innerHTML = userProjects.map(p => `
+      <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 gradient-btn rounded-lg flex items-center justify-center"><i class="fas fa-music"></i></div>
+          <div>
+            <div class="font-bold">${p.name}</div>
+            <div class="text-sm text-gray-400">${(p.size/1024/1024).toFixed(2)} MB • ${new Date(p.createdAt).toLocaleDateString('ar')}</div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="LocalDB.loadProject(${p.id})" class="text-blue-400 hover:text-blue-300"><i class="fas fa-play"></i> تشغيل</button>
+          <button onclick="LocalDB.downloadProject(${p.id})" class="text-green-400 hover:text-green-300"><i class="fas fa-download"></i> تحميل</button>
+          <button onclick="LocalDB.deleteProject(${p.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `).join('');
+  },
+  async loadProject(id) {
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readonly');
+    const store = tx.objectStore(this.storeName);
+    const project = await new Promise((resolve) => {
+      const req = store.get(id);
+      req.onsuccess = () => resolve(req.result);
+    });
+    if (project) {
+      AudioEngine.fileName = project.name;
+      AudioEngine.buffer = await AudioEngine.ctx.decodeAudioData(project.data.slice(0));
+      document.getElementById('file-name').textContent = project.name;
+      document.getElementById('file-info').textContent = `${(project.size/1024/1024).toFixed(2)} MB`;
+      document.getElementById('upload-area').style.display = 'none';
+      document.getElementById('editor').style.display = 'block';
+      AudioEngine.setupGraph();
+      AudioEngine.drawWaveform();
+      Effects.init();
+      App.initVisualizer();
+      App.toast('تم تحميل المشروع', 'success');
+    }
+  },
+  async downloadProject(id) {
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readonly');
+    const store = tx.objectStore(this.storeName);
+    const project = await new Promise((resolve) => {
+      const req = store.get(id);
+      req.onsuccess = () => resolve(req.result);
+    });
+    if (project) {
+      const blob = new Blob([project.data], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = project.name; a.click();
+      URL.revokeObjectURL(url);
+    }
+  },
+  async deleteProject(id) {
+    if (!confirm('حذف هذا المشروع؟')) return;
+    await this.init();
+    const tx = this.db.transaction(this.storeName, 'readwrite');
+    const store = tx.objectStore(this.storeName);
+    await new Promise((resolve) => {
+      const req = store.delete(id);
+      req.onsuccess = resolve;
+    });
+    App.toast('تم الحذف', 'success');
+    this.loadProjects();
+  }
 };
 
 window.addEventListener('DOMContentLoaded', () => App.init());
