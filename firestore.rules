@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+    // بيانات المستخدم
+    match /users/{userId} {
+
+      allow read, write: if request.auth != null &&
+                          request.auth.uid == userId;
+    }
+
+    // بيانات الأدمن
+    match /admins/{adminId} {
+
+      allow read: if request.auth != null &&
+                   request.auth.uid == adminId;
+
+      allow write: if false;
+    }
+
+  }
+
+}
