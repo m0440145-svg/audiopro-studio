@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AudioPro Studio - استوديو الصوت الاحترافي</title>
+<title>AudioPro - لوحة تحكم المطور</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
@@ -12,891 +12,495 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 * { font-family: 'Cairo', sans-serif; }
-body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); min-height: 100vh; color: white; margin: 0; }
-.glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
-.gradient-btn { background: linear-gradient(135deg, #667eea, #764ba2); transition: all 0.3s; }
+body { background: #0f172a; color: white; margin: 0; }
+.glass { background: rgba(30,41,59,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+.gradient-btn { background: linear-gradient(135deg, #667eea, #764ba2); }
 .gradient-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
-.page { display: none; }
-.page.active { display: block; }
-input, select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; }
-input::placeholder { color: rgba(255,255,255,0.5); }
-input:focus, select:focus { outline: none; border-color: #667eea; }
-.slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 5px; background: rgba(255,255,255,0.2); outline: none; }
-.slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); cursor: pointer; }
-.visualizer-bar { display: inline-block; width: 6px; background: linear-gradient(to top, #667eea, #764ba2); margin: 0 1px; border-radius: 2px; transition: height 0.05s; }
-.toast { padding: 12px 20px; border-radius: 12px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); animation: slideIn 0.3s; min-width: 250px; margin-bottom: 8px; }
-.toast.success { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); }
-.toast.error { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); }
-.toast.info { background: rgba(102,126,234,0.2); border-color: rgba(102,126,234,0.4); }
+.stat-card { transition: all 0.3s; }
+.stat-card:hover { transform: translateY(-5px); }
+.table-row { transition: all 0.2s; }
+.table-row:hover { background: rgba(102,126,234,0.1); }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+.badge-active { background: rgba(34,197,94,0.2); color: #4ade80; }
+.badge-free { background: rgba(102,126,234,0.2); color: #818cf8; }
+.badge-pro { background: rgba(250,204,21,0.2); color: #fde047; }
+.badge-studio { background: rgba(168,85,247,0.2); color: #c084fc; }
+.toast { padding: 12px 20px; border-radius: 12px; animation: slideIn 0.3s; margin-bottom: 8px; }
+.toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); }
+.toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); }
 @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-.plan-card { transition: all 0.3s; }
-.plan-card:hover { transform: translateY(-10px); }
-.popular { border: 2px solid #667eea; position: relative; }
-.popular::before { content: 'الأكثر شعبية'; position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
-.feature-icon { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; }
+.tab-active { background: linear-gradient(135deg, #667eea, #764ba2); }
 </style>
 </head>
 <body>
 
-<div id="loader" class="fixed inset-0 z-[100] bg-[#0f0c29] flex items-center justify-center">
-  <div class="text-center">
-    <div class="w-20 h-20 rounded-2xl gradient-btn flex items-center justify-center mx-auto mb-4 animate-pulse">
-      <i class="fas fa-waveform-lines text-3xl"></i>
+<div id="admin-login" class="min-h-screen flex items-center justify-center p-6">
+  <div class="glass rounded-3xl p-10 max-w-md w-full">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-shield-halved text-3xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold">لوحة تحكم المطور</h1>
+      <p class="text-gray-400 mt-2">AudioPro Studio Admin Panel</p>
     </div>
-    <p class="text-xl font-bold">جاري التحميل...</p>
-  </div>
-</div>
-
-<!-- الصفحة الرئيسية -->
-<div id="home" class="page active">
-  <nav class="glass sticky top-0 z-50 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center"><i class="fas fa-waveform-lines"></i></div>
-        <span class="text-2xl font-bold">AudioPro</span>
+    <form onsubmit="AdminAuth.login(event)">
+      <div class="mb-4">
+        <label class="block mb-2 text-sm">البريد الإلكتروني</label>
+        <input type="email" id="admin-email" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="admin@audiopro.com" required>
       </div>
-      <div class="flex gap-3">
-        <button onclick="Auth.showLogin()" class="px-5 py-2 rounded-lg hover:bg-white/10">دخول</button>
-        <button onclick="Auth.showRegister()" class="gradient-btn px-5 py-2 rounded-lg font-bold">ابدأ مجاناً</button>
+      <div class="mb-4">
+        <label class="block mb-2 text-sm">كلمة المرور</label>
+        <input type="password" id="admin-password" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="••••••••" required>
       </div>
-    </div>
-  </nav>
-
-  <section class="max-w-7xl mx-auto px-6 py-20 text-center">
-    <div class="inline-block glass px-4 py-2 rounded-full mb-6 text-sm">✨ مدعوم بالذكاء الاصطناعي</div>
-    <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight">
-      نظّف صوتك<br>
-      <span class="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">باحترافية الاستوديو</span>
-    </h1>
-    <p class="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">أزل الضوضاء، أضف الصدى، وحسّن جودة صوتك بنقرة واحدة</p>
-    <button onclick="Auth.showRegister()" class="gradient-btn px-8 py-4 rounded-xl font-bold text-lg">
-      <i class="fas fa-rocket ml-2"></i> ابدأ مجاناً الآن
-    </button>
-  </section>
-
-  <section class="max-w-7xl mx-auto px-6 py-20">
-    <h2 class="text-4xl font-bold text-center mb-12">مميزات احترافية</h2>
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-wand-magic-sparkles text-2xl"></i></div><h3 class="text-xl font-bold mb-2">إزالة الضوضاء AI</h3><p class="text-gray-300">تنقية صوتك من أي ضوضاء خلفية</p></div>
-      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-music text-2xl"></i></div><h3 class="text-xl font-bold mb-2">مؤثرات احترافية</h3><p class="text-gray-300">صدى، إيكو، ديلay، وأكثر</p></div>
-      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-bolt text-2xl"></i></div><h3 class="text-xl font-bold mb-2">معالجة فورية</h3><p class="text-gray-300">نتائج فورية بجودة استوديو</p></div>
-      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-microphone-lines text-2xl"></i></div><h3 class="text-xl font-bold mb-2">إزالة الموسيقى</h3><p class="text-gray-300">فصل الصوت عن الموسيقى</p></div>
-      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-robot text-2xl"></i></div><h3 class="text-xl font-bold mb-2">استنساخ الصوت</h3><p class="text-gray-300">نسخ صوتك بالذكاء الاصطناعي</p></div>
-      <div class="glass p-8 rounded-2xl"><div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center mb-4"><i class="fas fa-sliders text-2xl"></i></div><h3 class="text-xl font-bold mb-2">مغير الصوت</h3><p class="text-gray-300">تغيير نبرة وطبقة الصوت</p></div>
-    </div>
-  </section>
-
-  <section id="pricing" class="max-w-7xl mx-auto px-6 py-20">
-    <h2 class="text-4xl font-bold text-center mb-4">خطط الاشتراك</h2>
-    <p class="text-center text-gray-300 mb-12">اختر الخطة المناسبة لك</p>
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="plan-card glass p-8 rounded-2xl">
-        <h3 class="text-2xl font-bold mb-2">مجاني</h3>
-        <div class="text-4xl font-black mb-6">0$<span class="text-lg text-gray-400">/شهر</span></div>
-        <ul class="space-y-3 mb-8 text-right">
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>5 دقائق شهرياً</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جودة قياسية 128kbps</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>إزالة ضوضاء أساسية</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>3 مؤثرات صوتية</li>
-        </ul>
-        <button onclick="Plans.showDetails('free')" class="w-full glass py-3 rounded-xl font-bold hover:bg-white/10">ابدأ الآن</button>
+      <div class="mb-4">
+        <label class="block mb-2 text-sm">رمز المطور (Developer Code)</label>
+        <input type="password" id="admin-code" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="أدخل رمز الأمان" required>
       </div>
-      <div class="plan-card popular glass p-8 rounded-2xl">
-        <h3 class="text-2xl font-bold mb-2">احترافي</h3>
-        <div class="text-4xl font-black mb-6">9.99$<span class="text-lg text-gray-400">/شهر</span></div>
-        <ul class="space-y-3 mb-8 text-right">
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>5 ساعات شهرياً</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جودة عالية 320kbps</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>إزالة ضوضاء بـ AI</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جميع المؤثرات</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>بدون علامة مائية</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>إزالة الموسيقى</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>مغير الصوت المتقدم</li>
-        </ul>
-        <button onclick="Plans.showDetails('pro')" class="w-full gradient-btn py-3 rounded-xl font-bold">اشترك الآن</button>
-      </div>
-      <div class="plan-card glass p-8 rounded-2xl">
-        <h3 class="text-2xl font-bold mb-2">استوديو</h3>
-        <div class="text-4xl font-black mb-6">24.99$<span class="text-lg text-gray-400">/شهر</span></div>
-        <ul class="space-y-3 mb-8 text-right">
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>استخدام غير محدود</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جودة WAV/FLAC</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>جميع ميزات Pro</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>استنساخ الصوت AI</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>API access</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>50GB تخزين سحابي</li>
-          <li class="flex items-center"><i class="fas fa-check text-green-400 ml-2"></i>دعم فني 24/7</li>
-        </ul>
-        <button onclick="Plans.showDetails('studio')" class="w-full glass py-3 rounded-xl font-bold hover:bg-white/10">اشترك الآن</button>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- صفحة تفاصيل الخطة -->
-<div id="plan-details" class="page">
-  <nav class="glass sticky top-0 z-50 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <button onclick="App.showPage('home')" class="flex items-center gap-2 text-gray-300 hover:text-white transition">
-        <i class="fas fa-arrow-right"></i>
-        <span>العودة للرئيسية</span>
+      <button type="submit" class="w-full gradient-btn py-4 rounded-xl font-bold text-lg">
+        <i class="fas fa-right-to-bracket ml-2"></i> دخول
       </button>
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center"><i class="fas fa-waveform-lines"></i></div>
-        <span class="text-2xl font-bold">AudioPro</span>
-      </div>
-    </div>
-  </nav>
-
-  <div class="max-w-4xl mx-auto px-6 py-20">
-    <div id="plan-content" class="glass rounded-3xl p-10">
-      <!-- سيتم ملء المحتوى ديناميكياً -->
-    </div>
+    </form>
+    <p class="text-center mt-6 text-gray-400 text-sm">
+      <a href="index.html" class="text-purple-400 hover:underline">← العودة للموقع</a>
+    </p>
   </div>
 </div>
 
-<!-- صفحة التسجيل -->
-<div id="auth-page" class="page">
-  <div class="min-h-screen flex items-center justify-center p-6">
-    <div class="glass rounded-3xl p-10 max-w-md w-full glow">
-      <div class="text-center mb-8">
-        <div class="w-16 h-16 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-user-shield text-2xl"></i></div>
-        <h2 id="auth-title" class="text-3xl font-bold">تسجيل الدخول</h2>
+<div id="admin-panel" style="display:none">
+  <div class="fixed right-0 top-0 h-full w-64 glass z-40 p-6">
+    <div class="flex items-center gap-2 mb-8">
+      <div class="w-10 h-10 gradient-btn rounded-xl flex items-center justify-center">
+        <i class="fas fa-shield-halved"></i>
       </div>
-      <div class="flex gap-2 mb-6">
-        <button onclick="Auth.switchTab('email')" id="tab-email" class="flex-1 py-3 rounded-xl gradient-btn font-bold text-sm"><i class="fas fa-envelope"></i> بريد</button>
-        <button onclick="Auth.switchTab('phone')" id="tab-phone" class="flex-1 py-3 rounded-xl glass font-bold text-sm"><i class="fas fa-phone"></i> جوال</button>
-      </div>
-      <form id="email-form" onsubmit="Auth.handleEmailAuth(event)">
-        <div id="name-field" class="mb-4" style="display:none">
-          <input type="text" id="user-name" class="w-full px-4 py-3 rounded-xl mb-4" placeholder="الاسم الكامل">
-        </div>
-        <input type="email" id="user-email" class="w-full px-4 py-3 rounded-xl mb-4" placeholder="البريد الإلكتروني" required>
-        <input type="password" id="user-password" class="w-full px-4 py-3 rounded-xl mb-4" placeholder="كلمة المرور (6+ أحرف)" required minlength="6">
-        <button type="submit" class="w-full gradient-btn py-4 rounded-xl font-bold"><span id="auth-btn-text">تسجيل الدخول</span></button>
-      </form>
-      <div class="flex items-center gap-3 my-6"><div class="flex-1 h-px bg-white/20"></div><span class="text-gray-400 text-sm">أو</span><div class="flex-1 h-px bg-white/20"></div></div>
-      <div class="grid grid-cols-3 gap-3">
-        <button onclick="Auth.socialLogin('google')" class="glass py-3 rounded-xl hover:bg-white/10"><i class="fab fa-google"></i></button>
-        <button onclick="Auth.socialLogin('facebook')" class="glass py-3 rounded-xl hover:bg-white/10"><i class="fab fa-facebook"></i></button>
-        <button onclick="Auth.socialLogin('apple')" class="glass py-3 rounded-xl hover:bg-white/10"><i class="fab fa-apple"></i></button>
-      </div>
-      <p class="text-center mt-6 text-gray-400 text-sm"><span id="auth-switch-text">ليس لديك حساب؟</span><a onclick="Auth.toggleAuthMode()" class="text-purple-400 cursor-pointer font-bold" id="auth-switch-link">سجل الآن</a></p>
+      <span class="text-xl font-bold">Admin Panel</span>
     </div>
+    <nav class="space-y-2">
+      <button onclick="Admin.showTab('dashboard')" id="tab-dashboard" class="w-full text-right px-4 py-3 rounded-xl tab-active flex items-center gap-3">
+        <i class="fas fa-chart-line"></i> لوحة التحكم
+      </button>
+      <button onclick="Admin.showTab('users')" id="tab-users" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
+        <i class="fas fa-users"></i> المستخدمون
+      </button>
+      <button onclick="Admin.showTab('projects')" id="tab-projects" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
+        <i class="fas fa-folder"></i> المشاريع
+      </button>
+      <button onclick="Admin.showTab('settings')" id="tab-settings" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
+        <i class="fas fa-gear"></i> الإعدادات
+      </button>
+      <button onclick="AdminAuth.logout()" class="w-full text-right px-4 py-3 rounded-xl hover:bg-red-500/20 text-red-400 flex items-center gap-3 mt-8">
+        <i class="fas fa-sign-out"></i> خروج
+      </button>
+    </nav>
   </div>
-</div>
 
-<!-- لوحة التحكم -->
-<div id="dashboard" class="page">
-  <nav class="glass sticky top-0 z-50 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center"><i class="fas fa-waveform-lines"></i></div>
-        <span class="text-xl font-bold">AudioPro Studio</span>
+  <div class="mr-64 p-8">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold" id="page-title">لوحة التحكم</h1>
+        <p class="text-gray-400 mt-1">مرحباً بك، <span id="admin-name">المطور</span></p>
       </div>
       <div class="flex items-center gap-4">
-        <span class="hidden md:inline text-sm"><i class="fas fa-crown text-yellow-400"></i> <span id="user-plan">مجاني</span></span>
-        <span class="hidden md:inline text-sm text-gray-300" id="user-display"></span>
-        <button onclick="Auth.logout()" class="glass px-4 py-2 rounded-lg hover:bg-white/10 text-sm"><i class="fas fa-sign-out"></i> خروج</button>
+        <div class="glass px-4 py-2 rounded-xl">
+          <i class="fas fa-circle text-green-400 ml-2"></i>
+          <span class="text-sm">متصل</span>
+        </div>
+        <button onclick="Admin.refreshData()" class="gradient-btn px-4 py-2 rounded-xl">
+          <i class="fas fa-rotate-right"></i> تحديث
+        </button>
       </div>
     </div>
-  </nav>
-  <div class="max-w-7xl mx-auto px-6 py-8">
-    <div class="mb-8"><h1 class="text-3xl font-bold mb-2">مرحباً 👋</h1><p class="text-gray-400">ارفع ملفك الصوتي وابدأ المعالجة الاحترافية</p></div>
-    <div id="upload-area" class="glass rounded-3xl p-12 text-center border-2 border-dashed border-white/20 hover:border-purple-400 transition-all cursor-pointer mb-8" onclick="document.getElementById('audio-file').click()">
-      <input type="file" id="audio-file" accept="audio/*" class="hidden" onchange="AudioEngine.handleFile(event)">
-      <div class="w-20 h-20 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-cloud-arrow-up text-3xl"></i></div>
-      <h3 class="text-2xl font-bold mb-2">اسحب الملف هنا أو اضغط للرفع</h3>
-      <p class="text-gray-400">MP3, WAV, FLAC, OGG - حتى 50MB</p>
-    </div>
-    <div id="editor" style="display:none">
+
+    <div id="content-dashboard" class="tab-content">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 gradient-btn rounded-xl flex items-center justify-center">
+              <i class="fas fa-users text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-users">0</div>
+          <div class="text-gray-400 text-sm mt-1">إجمالي المستخدمين</div>
+        </div>
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-folder text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-projects">0</div>
+          <div class="text-gray-400 text-sm mt-1">المشاريع المحفوظة</div>
+        </div>
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-crown text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-pro">0</div>
+          <div class="text-gray-400 text-sm mt-1">مشتركين Pro</div>
+        </div>
+        <div class="stat-card glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-dollar-sign text-xl"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold" id="stat-revenue">$0</div>
+          <div class="text-gray-400 text-sm mt-1">الإيرادات الشهرية</div>
+        </div>
+      </div>
+
       <div class="glass rounded-2xl p-6 mb-6">
-        <div class="flex items-center justify-between flex-wrap gap-4">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 gradient-btn rounded-xl flex items-center justify-center"><i class="fas fa-music text-xl"></i></div>
-            <div><h3 id="file-name" class="font-bold text-lg">file.mp3</h3><p id="file-info" class="text-sm text-gray-400">0:00 • 0 MB</p></div>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="AudioEngine.playPause()" id="play-btn" class="gradient-btn px-6 py-3 rounded-xl font-bold"><i class="fas fa-play"></i></button>
-            <button onclick="AudioEngine.stop()" class="glass px-4 py-3 rounded-xl hover:bg-white/10"><i class="fas fa-stop"></i></button>
-            <button onclick="AudioEngine.reset()" class="glass px-4 py-3 rounded-xl hover:bg-white/10"><i class="fas fa-rotate-right"></i></button>
-          </div>
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <i class="fas fa-clock text-purple-400"></i> آخر المستخدمين المسجلين
+        </h3>
+        <div id="recent-users" class="space-y-3">
+          <p class="text-gray-400 text-center py-8">جاري التحميل...</p>
         </div>
-        <div class="mt-6 bg-black/30 rounded-xl p-4"><canvas id="waveform" class="w-full h-24"></canvas></div>
       </div>
-      <div class="grid md:grid-cols-3 gap-6">
+
+      <div class="grid md:grid-cols-2 gap-6">
         <div class="glass rounded-2xl p-6">
-          <h3 class="text-xl font-bold mb-4"><i class="fas fa-wand-magic-sparkles text-purple-400"></i> المؤثرات</h3>
-          <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2" id="effects-container"></div>
-          <div class="mt-4 pt-4 border-t border-white/10">
-            <h4 class="font-bold mb-3 text-sm text-purple-300">الميزات المتقدمة</h4>
-            <button onclick="AudioEngine.removeMusic()" class="w-full glass py-2 rounded-lg mb-2 hover:bg-white/10 text-sm"><i class="fas fa-microphone-lines ml-1"></i> إزالة الموسيقى</button>
-            <button onclick="AudioEngine.voiceChanger()" class="w-full glass py-2 rounded-lg mb-2 hover:bg-white/10 text-sm"><i class="fas fa-sliders ml-1"></i> مغير الصوت</button>
-            <button onclick="AudioEngine.cloneVoice()" class="w-full glass py-2 rounded-lg hover:bg-white/10 text-sm"><i class="fas fa-robot ml-1"></i> استنساخ الصوت</button>
-          </div>
-          <button onclick="Effects.autoEnhance()" class="w-full gradient-btn py-3 rounded-xl font-bold mt-4"><i class="fas fa-sparkles"></i> تحسين AI تلقائي</button>
+          <h3 class="text-xl font-bold mb-4">توزيع الخطط</h3>
+          <div id="plans-chart" class="space-y-4"></div>
         </div>
         <div class="glass rounded-2xl p-6">
-          <h3 class="text-xl font-bold mb-4"><i class="fas fa-chart-line text-purple-400"></i> المحلل المباشر</h3>
-          <div id="visualizer" class="bg-black/30 rounded-xl p-4 h-64 flex items-end justify-center gap-1"></div>
-          <div class="grid grid-cols-3 gap-2 mt-4 text-center text-xs">
-            <div class="glass rounded-lg p-2"><div class="text-gray-400">Bass</div><div id="bass-level" class="font-bold text-purple-400">0%</div></div>
-            <div class="glass rounded-lg p-2"><div class="text-gray-400">Mid</div><div id="mid-level" class="font-bold text-purple-400">0%</div></div>
-            <div class="glass rounded-lg p-2"><div class="text-gray-400">Treble</div><div id="treble-level" class="font-bold text-purple-400">0%</div></div>
-          </div>
-        </div>
-        <div class="glass rounded-2xl p-6">
-          <h3 class="text-xl font-bold mb-4"><i class="fas fa-download text-purple-400"></i> التصدير</h3>
-          <div class="space-y-3">
-            <div><label class="block mb-2 text-sm">الصيغة</label><select id="export-format" class="w-full px-4 py-3 rounded-xl"><option value="wav">WAV (Lossless)</option><option value="mp3">MP3 (320kbps)</option><option value="ogg">OGG</option></select></div>
-          </div>
-          <button onclick="AudioEngine.export()" class="w-full gradient-btn py-3 rounded-xl font-bold mt-6"><i class="fas fa-download"></i> تحميل</button>
-          <button onclick="LocalDB.saveProject()" class="w-full glass py-3 rounded-xl font-bold mt-2 hover:bg-white/10"><i class="fas fa-save"></i> حفظ محلي</button>
-          <div class="mt-4 p-3 bg-blue-500/10 rounded-xl border border-blue-500/30 text-xs text-gray-300">
-            <i class="fas fa-info-circle text-blue-400"></i> الحفظ المحلي في متصفحك فقط
-          </div>
+          <h3 class="text-xl font-bold mb-4">النشاط الأخير</h3>
+          <div id="activity-log" class="space-y-3 max-h-64 overflow-y-auto"></div>
         </div>
       </div>
     </div>
-    <div class="glass rounded-2xl p-6 mt-6">
-      <h3 class="text-xl font-bold mb-4"><i class="fas fa-folder-open text-purple-400"></i> مشاريعي المحفوظة</h3>
-      <div id="my-projects" class="space-y-3">
-        <p class="text-gray-400 text-center py-4">لا توجد مشاريع محفوظة بعد</p>
+
+    <div id="content-users" class="tab-content" style="display:none">
+      <div class="glass rounded-2xl p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold">إدارة المستخدمين</h3>
+          <input type="text" id="search-users" placeholder="🔍 بحث..." class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700" oninput="Admin.searchUsers(this.value)">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-700 text-right">
+                <th class="p-3">المستخدم</th>
+                <th class="p-3">البريد</th>
+                <th class="p-3">الخطة</th>
+                <th class="p-3">الحالة</th>
+                <th class="p-3">تاريخ التسجيل</th>
+                <th class="p-3">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="users-table">
+              <tr><td colspan="6" class="text-center py-8 text-gray-400">جاري التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="content-projects" class="tab-content" style="display:none">
+      <div class="glass rounded-2xl p-6">
+        <h3 class="text-xl font-bold mb-6">جميع المشاريع المحفوظة</h3>
+        <div id="projects-list" class="space-y-3">
+          <p class="text-center py-8 text-gray-400">جاري التحميل...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="content-settings" class="tab-content" style="display:none">
+      <div class="glass rounded-2xl p-6 mb-6">
+        <h3 class="text-xl font-bold mb-4">إعدادات الموقع</h3>
+        <div class="space-y-4">
+          <div><label class="block mb-2">اسم الموقع</label><input type="text" value="AudioPro Studio" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700"></div>
+          <div><label class="block mb-2">وصف الموقع</label><input type="text" value="استوديو الصوت الاحترافي" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700"></div>
+          <div><label class="block mb-2">البريد الرسمي</label><input type="email" value="admin@audiopro.com" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700"></div>
+          <button class="gradient-btn px-6 py-3 rounded-xl">حفظ الإعدادات</button>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <h3 class="text-xl font-bold mb-4">إدارة قاعدة البيانات</h3>
+        <div class="flex gap-3">
+          <button onclick="Admin.exportData()" class="gradient-btn px-6 py-3 rounded-xl"><i class="fas fa-download ml-2"></i> تصدير البيانات</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<div id="toast-container" class="fixed top-6 left-6 z-[200] space-y-2"></div>
+<div id="toast-container" class="fixed top-6 left-6 z-[200]"></div>
 
 <script>
-// ============ Firebase Config ============
-const CONFIG = {
-  firebase: {
-    apiKey: "AIzaSyCznJN1dZP4B4lqpX0YVxjNVG5NfpYu8sI",
-    authDomain: "audiopro-studio.firebaseapp.com",
-    projectId: "audiopro-studio",
-    storageBucket: "audiopro-studio.firebasestorage.app",
-    messagingSenderId: "684940159867",
-    appId: "1:684940159867:web:58ce24e2d970e5ec0eebde"
-  },
-  plans: {
-    free: { name: "مجاني", price: 0, minutes: 5, quality: "128kbps", features: ["5 دقائق شهرياً", "جودة قياسية 128kbps", "إزالة ضوضاء أساسية", "3 مؤثرات صوتية"] },
-    pro: { name: "احترافي", price: 9.99, minutes: 300, quality: "320kbps", features: ["5 ساعات شهرياً", "جودة عالية 320kbps", "إزالة ضوضاء بـ AI", "جميع المؤثرات", "بدون علامة مائية", "إزالة الموسيقى", "مغير الصوت المتقدم"] },
-    studio: { name: "استوديو", price: 24.99, minutes: -1, quality: "Lossless", features: ["استخدام غير محدود", "جودة WAV/FLAC", "جميع ميزات Pro", "استنساخ الصوت AI", "API access", "50GB تخزين سحابي", "دعم فني 24/7"] }
-  }
+const firebaseConfig = {
+  apiKey: "AIzaSyCznJN1dZP4B4lqpX0YVxjNVG5NfpYu8sI",
+  authDomain: "audiopro-studio.firebaseapp.com",
+  projectId: "audiopro-studio",
+  storageBucket: "audiopro-studio.firebasestorage.app",
+  messagingSenderId: "684940159867",
+  appId: "1:684940159867:web:58ce24e2d970e5ec0eebde"
 };
-firebase.initializeApp(CONFIG.firebase);
+firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ============ Plans ============
-const Plans = {
-  showDetails(planId) {
-    const plan = CONFIG.plans[planId];
-    if (!plan) return;
+const DEVELOPER_CODE = "ADMIN2026";
 
-    const content = document.getElementById('plan-content');
-    content.innerHTML = `
-      <div class="text-center mb-8">
-        <div class="w-20 h-20 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <i class="fas fa-crown text-3xl"></i>
-        </div>
-        <h2 class="text-4xl font-bold mb-2">${plan.name}</h2>
-        <div class="text-5xl font-black mb-4">$${plan.price}<span class="text-2xl text-gray-400">/شهر</span></div>
-        ${plan.minutes === -1 ? '<span class="badge bg-green-500/20 text-green-400 px-4 py-1 rounded-full">غير محدود</span>' : `<span class="text-gray-300">${plan.minutes} دقيقة شهرياً</span>`}
-      </div>
-      <div class="mb-8">
-        <h3 class="text-xl font-bold mb-4">المميزات:</h3>
-        <ul class="space-y-3">
-          ${plan.features.map(f => `
-            <li class="flex items-center p-3 bg-white/5 rounded-xl">
-              <i class="fas fa-check-circle text-green-400 ml-3 text-xl"></i>
-              <span>${f}</span>
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-      <div class="flex gap-4">
-        <button onclick="Auth.showRegister()" class="flex-1 gradient-btn py-4 rounded-xl font-bold text-lg">
-          <i class="fas fa-rocket ml-2"></i> ابدأ الآن
-        </button>
-        <button onclick="App.showPage('home')" class="flex-1 glass py-4 rounded-xl font-bold text-lg hover:bg-white/10">
-          <i class="fas fa-arrow-right ml-2"></i> العودة للرئيسية
-        </button>
-      </div>
-    `;
+const AdminAuth = {
+  async login(e) {
+    e.preventDefault();
+    const email = document.getElementById('admin-email').value;
+    const password = document.getElementById('admin-password').value;
+    const code = document.getElementById('admin-code').value;
 
-    App.showPage('plan-details');
-  }
-};
+    if (code !== DEVELOPER_CODE) {
+      this.toast('❌ رمز المطور غير صحيح', 'error');
+      return;
+    }
 
-// ============ App ============
-const App = {
-  init() {
-    Auth.init();
-    this.setupDragDrop();
-    document.getElementById('loader').style.display = 'none';
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      this.toast('✅ تم تسجيل الدخول بنجاح', 'success');
+      document.getElementById('admin-login').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      document.getElementById('admin-name').textContent = email;
+      Admin.loadDashboard();
+    } catch (err) {
+      this.toast('❌ ' + err.message, 'error');
+    }
   },
-  showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
-    window.scrollTo(0, 0);
+
+  async logout() {
+    await auth.signOut();
+    document.getElementById('admin-login').style.display = 'flex';
+    document.getElementById('admin-panel').style.display = 'none';
   },
-  toast(message, type = 'info') {
+
+  toast(msg, type) {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.textContent = message;
+    toast.textContent = msg;
     container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
-  },
-  showLoading(show) {
-    let overlay = document.getElementById('loading-overlay');
-    if (show) {
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'loading-overlay';
-        overlay.className = 'fixed inset-0 bg-black/50 z-[150] flex items-center justify-center';
-        overlay.innerHTML = '<div class="glass rounded-2xl p-8 text-center"><div class="w-16 h-16 gradient-btn rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse"><i class="fas fa-spinner fa-spin text-2xl"></i></div><p>جاري المعالجة...</p></div>';
-        document.body.appendChild(overlay);
-      }
-    } else if (overlay) overlay.remove();
-  },
-  setupDragDrop() {
-    const area = document.getElementById('upload-area');
-    if (!area) return;
-    ['dragenter', 'dragover'].forEach(e => area.addEventListener(e, ev => { ev.preventDefault(); area.classList.add('border-purple-400', 'bg-purple-500/10'); }));
-    ['dragleave', 'drop'].forEach(e => area.addEventListener(e, ev => { ev.preventDefault(); area.classList.remove('border-purple-400', 'bg-purple-500/10'); }));
-    area.addEventListener('drop', ev => {
-      const file = ev.dataTransfer.files[0];
-      if (file && file.type.startsWith('audio/')) {
-        document.getElementById('audio-file').files = ev.dataTransfer.files;
-        AudioEngine.handleFile({ target: { files: [file] } });
-      }
-    });
-  },
-  initVisualizer() {
-    const viz = document.getElementById('visualizer');
-    viz.innerHTML = '';
-    for (let i = 0; i < 32; i++) {
-      const bar = document.createElement('div');
-      bar.className = 'visualizer-bar';
-      bar.style.height = '5%';
-      viz.appendChild(bar);
-    }
-  },
-  animateVisualizer() {
-    const analyser = AudioEngine.nodes.analyser;
-    if (!analyser || !AudioEngine.isPlaying) return;
-    analyser.getByteFrequencyData(AudioEngine.dataArray);
-    const bars = document.querySelectorAll('.visualizer-bar');
-    const step = Math.floor(AudioEngine.dataArray.length / bars.length);
-    let bass = 0, mid = 0, treble = 0;
-    bars.forEach((bar, i) => {
-      const value = AudioEngine.dataArray[i * step] || 0;
-      bar.style.height = Math.max(5, value / 2.5) + '%';
-      if (i < 8) bass += value; else if (i < 20) mid += value; else treble += value;
-    });
-    document.getElementById('bass-level').textContent = Math.round(bass/8/2.55) + '%';
-    document.getElementById('mid-level').textContent = Math.round(mid/12/2.55) + '%';
-    document.getElementById('treble-level').textContent = Math.round(treble/12/2.55) + '%';
-    AudioEngine.animationId = requestAnimationFrame(() => this.animateVisualizer());
+    setTimeout(() => toast.remove(), 3000);
   }
 };
 
-// ============ Auth ============
-const Auth = {
-  currentUser: null,
-  confirmationResult: null,
-  isRegisterMode: false,
-  authMethod: 'email',
-  init() {
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        this.currentUser = user;
-        this.loadUserData();
-        App.showPage('dashboard');
-        LocalDB.loadProjects();
-      } else {
-        App.showPage('home');
-      }
-    });
-  },
-  showLogin() { this.isRegisterMode = false; this.updateAuthUI(); App.showPage('auth-page'); },
-  showRegister() { this.isRegisterMode = true; this.updateAuthUI(); App.showPage('auth-page'); },
-  updateAuthUI() {
-    document.getElementById('auth-title').textContent = this.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
-    document.getElementById('auth-btn-text').textContent = this.isRegisterMode ? 'إنشاء الحساب' : 'تسجيل الدخول';
-    document.getElementById('name-field').style.display = this.isRegisterMode ? 'block' : 'none';
-    document.getElementById('auth-switch-text').textContent = this.isRegisterMode ? 'لديك حساب؟' : 'ليس لديك حساب؟';
-    document.getElementById('auth-switch-link').textContent = this.isRegisterMode ? 'سجل دخول' : 'سجل الآن';
-  },
-  toggleAuthMode() { this.isRegisterMode = !this.isRegisterMode; this.updateAuthUI(); },
-  switchTab(method) {
-    this.authMethod = method;
-    document.getElementById('email-form').style.display = method === 'email' ? 'block' : 'none';
-    document.getElementById('phone-form').style.display = method === 'phone' ? 'block' : 'none';
-    document.getElementById('otp-form').style.display = 'none';
-    document.getElementById('tab-email').className = `flex-1 py-3 rounded-xl font-bold text-sm ${method === 'email' ? 'gradient-btn' : 'glass'}`;
-    document.getElementById('tab-phone').className = `flex-1 py-3 rounded-xl font-bold text-sm ${method === 'phone' ? 'gradient-btn' : 'glass'}`;
-  },
-  async handleEmailAuth(e) {
-    e.preventDefault();
-    const email = document.getElementById('user-email').value;
-    const password = document.getElementById('user-password').value;
-    const name = document.getElementById('user-name').value;
-    try {
-      App.showLoading(true);
-      if (this.isRegisterMode) {
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
-        await cred.user.updateProfile({ displayName: name });
-        await db.collection('users').doc(cred.user.uid).set({ name, email, plan: 'free', createdAt: firebase.firestore.FieldValue.serverTimestamp(), usageMinutes: 0 });
-        App.toast('✅ تم إنشاء الحساب بنجاح!', 'success');
-      } else {
-        await auth.signInWithEmailAndPassword(email, password);
-        App.toast('✅ مرحباً بعودتك!', 'success');
-      }
-    } catch (err) { App.toast('❌ ' + this.translateError(err.code), 'error'); } finally { App.showLoading(false); }
-  },
-  async socialLogin(provider) {
-    try {
-      App.showLoading(true);
-      let p;
-      if (provider === 'google') p = new firebase.auth.GoogleAuthProvider();
-      else if (provider === 'facebook') p = new firebase.auth.FacebookAuthProvider();
-      else if (provider === 'apple') p = new firebase.auth.OAuthProvider('apple.com');
-      const result = await auth.signInWithPopup(p);
-      if (result.additionalUserInfo.isNewUser) {
-        await db.collection('users').doc(result.user.uid).set({ name: result.user.displayName, email: result.user.email, plan: 'free', createdAt: firebase.firestore.FieldValue.serverTimestamp(), usageMinutes: 0 });
-      }
-      App.toast('✅ تم الدخول بنجاح!', 'success');
-    } catch (err) { App.toast('❌ ' + this.translateError(err.code), 'error'); } finally { App.showLoading(false); }
-  },
-  async loadUserData() {
-    const doc = await db.collection('users').doc(this.currentUser.uid).get();
-    if (doc.exists) {
-      const data = doc.data();
-      document.getElementById('user-display').textContent = data.name || this.currentUser.email || this.currentUser.phoneNumber;
-      document.getElementById('user-plan').textContent = CONFIG.plans[data.plan]?.name || 'مجاني';
-    }
-  },
-  async logout() { await auth.signOut(); App.toast('👋 تم تسجيل الخروج', 'info'); },
-  translateError(code) {
-    const errors = { 'auth/email-already-in-use': 'البريد مستخدم بالفعل', 'auth/invalid-email': 'بريد غير صحيح', 'auth/weak-password': 'كلمة المرور ضعيفة', 'auth/user-not-found': 'المستخدم غير موجود', 'auth/wrong-password': 'كلمة مرور خاطئة', 'auth/too-many-requests': 'محاولات كثيرة', 'auth/invalid-phone-number': 'رقم جوال غير صحيح', 'auth/popup-closed-by-user': 'تم إغلاق النافذة' };
-    return errors[code] || 'حدث خطأ';
-  }
-};
+const Admin = {
+  allUsers: [],
 
-// ============ Audio Engine ============
-const AudioEngine = {
-  ctx: null, source: null, buffer: null, fileName: '', isPlaying: false, startTime: 0, pauseTime: 0,
-  nodes: { input: null, noiseGate: null, highpass: null, lowpass: null, compressor: null, eq: [], reverb: null, reverbGain: null, delay: null, delayFeedback: null, delayGain: null, chorus: null, flanger: null, gain: null, analyser: null, pitchShifter: null },
-  animationId: null, dataArray: null,
-  init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-  async handleFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    this.fileName = file.name;
-    document.getElementById('file-name').textContent = file.name;
-    document.getElementById('upload-area').style.display = 'none';
-    document.getElementById('editor').style.display = 'block';
-    try {
-      if (!this.ctx) this.init();
-      const arrayBuffer = await file.arrayBuffer();
-      this.buffer = await this.ctx.decodeAudioData(arrayBuffer);
-      const duration = this.formatTime(this.buffer.duration);
-      const size = (file.size / 1024 / 1024).toFixed(2);
-      document.getElementById('file-info').textContent = `${duration} • ${size} MB`;
-      this.setupGraph();
-      this.drawWaveform();
-      Effects.init();
-      App.initVisualizer();
-      App.toast('✅ تم تحميل الملف بنجاح', 'success');
-    } catch (err) { App.toast('❌ خطأ في قراءة الملف', 'error'); }
-  },
-  setupGraph() {
-    if (this.source) { try { this.source.disconnect(); } catch(e) {} }
-    Object.values(this.nodes).forEach(n => { if (n) try { n.disconnect(); } catch(e) {} });
-    this.nodes.input = this.ctx.createBufferSource();
-    this.nodes.input.buffer = this.buffer;
-    this.nodes.highpass = this.ctx.createBiquadFilter();
-    this.nodes.highpass.type = 'highpass'; this.nodes.highpass.frequency.value = 80;
-    this.nodes.lowpass = this.ctx.createBiquadFilter();
-    this.nodes.lowpass.type = 'lowpass'; this.nodes.lowpass.frequency.value = 12000;
-    this.nodes.noiseGate = this.ctx.createDynamicsCompressor();
-    this.nodes.noiseGate.threshold.value = -50; this.nodes.noiseGate.ratio.value = 4;
-    this.nodes.compressor = this.ctx.createDynamicsCompressor();
-    this.nodes.compressor.threshold.value = -24; this.nodes.compressor.ratio.value = 4;
-    const eqFreqs = [60, 250, 1000, 4000, 12000];
-    this.nodes.eq = eqFreqs.map((freq, i) => {
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = i === 0 ? 'lowshelf' : i === 4 ? 'highshelf' : 'peaking';
-      filter.frequency.value = freq; filter.Q.value = 1; filter.gain.value = 0;
-      return filter;
-    });
-    this.nodes.reverb = this.ctx.createConvolver();
-    this.nodes.reverb.buffer = this.createReverbImpulse(2.5, 2.5);
-    this.nodes.reverbGain = this.ctx.createGain(); this.nodes.reverbGain.gain.value = 0;
-    this.nodes.delay = this.ctx.createDelay(5.0); this.nodes.delay.delayTime.value = 0.3;
-    this.nodes.delayFeedback = this.ctx.createGain(); this.nodes.delayFeedback.gain.value = 0.3;
-    this.nodes.delayGain = this.ctx.createGain(); this.nodes.delayGain.gain.value = 0;
-    this.nodes.chorus = this.ctx.createDelay(0.1); this.nodes.chorus.delayTime.value = 0.025;
-    const chorusLFO = this.ctx.createOscillator();
-    const chorusGain = this.ctx.createGain();
-    chorusLFO.frequency.value = 1.5; chorusGain.gain.value = 0.005;
-    chorusLFO.connect(chorusGain); chorusGain.connect(this.nodes.chorus.delayTime); chorusLFO.start();
-    this.nodes.flanger = this.ctx.createDelay(0.02); this.nodes.flanger.delayTime.value = 0.005;
-    const flangerLFO = this.ctx.createOscillator();
-    const flangerGain = this.ctx.createGain();
-    flangerLFO.frequency.value = 0.25; flangerGain.gain.value = 0.003;
-    flangerLFO.connect(flangerGain); flangerGain.connect(this.nodes.flanger.delayTime); flangerLFO.start();
-    this.nodes.gain = this.ctx.createGain(); this.nodes.gain.gain.value = 1;
-    this.nodes.analyser = this.ctx.createAnalyser(); this.nodes.analyser.fftSize = 256;
-    this.dataArray = new Uint8Array(this.nodes.analyser.frequencyBinCount);
-    this.nodes.input.connect(this.nodes.highpass).connect(this.nodes.lowpass).connect(this.nodes.noiseGate).connect(this.nodes.compressor);
-    let lastNode = this.nodes.compressor;
-    this.nodes.eq.forEach(eq => { lastNode.connect(eq); lastNode = eq; });
-    const dryGain = this.ctx.createGain(); dryGain.gain.value = 1;
-    lastNode.connect(dryGain); lastNode.connect(this.nodes.reverb);
-    this.nodes.reverb.connect(this.nodes.reverbGain);
-    dryGain.connect(this.nodes.gain); this.nodes.reverbGain.connect(this.nodes.gain);
-    lastNode.connect(this.nodes.delay); this.nodes.delay.connect(this.nodes.delayFeedback);
-    this.nodes.delayFeedback.connect(this.nodes.delay);
-    this.nodes.delay.connect(this.nodes.delayGain); this.nodes.delayGain.connect(this.nodes.gain);
-    this.nodes.gain.connect(this.nodes.analyser).connect(this.ctx.destination);
-    this.source = this.nodes.input;
-  },
-  createReverbImpulse(duration, decay) {
-    const rate = this.ctx.sampleRate; const length = rate * duration;
-    const impulse = this.ctx.createBuffer(2, length, rate);
-    for (let ch = 0; ch < 2; ch++) {
-      const data = impulse.getChannelData(ch);
-      for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/length, decay);
-    }
-    return impulse;
-  },
-  playPause() { this.isPlaying ? this.pause() : this.play(); },
-  play() {
-    if (!this.buffer) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
-    this.nodes.input = this.ctx.createBufferSource();
-    this.nodes.input.buffer = this.buffer;
-    this.nodes.input.connect(this.nodes.highpass);
-    const offset = this.pauseTime;
-    this.nodes.input.start(0, offset);
-    this.startTime = this.ctx.currentTime - offset;
-    this.isPlaying = true;
-    document.getElementById('play-btn').innerHTML = '<i class="fas fa-pause"></i>';
-    App.animateVisualizer();
-    this.nodes.input.onended = () => {
-      if (this.isPlaying) { this.isPlaying = false; this.pauseTime = 0; document.getElementById('play-btn').innerHTML = '<i class="fas fa-play"></i>'; cancelAnimationFrame(this.animationId); }
+  showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.getElementById(`content-${tabName}`).style.display = 'block';
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.remove('tab-active'));
+    document.getElementById(`tab-${tabName}`).classList.add('tab-active');
+
+    const titles = {
+      dashboard: 'لوحة التحكم',
+      users: 'إدارة المستخدمين',
+      projects: 'المشاريع المحفوظة',
+      settings: 'الإعدادات'
     };
-  },
-  pause() {
-    if (!this.isPlaying) return;
-    this.pauseTime = this.ctx.currentTime - this.startTime;
-    this.nodes.input.stop(); this.isPlaying = false;
-    document.getElementById('play-btn').innerHTML = '<i class="fas fa-play"></i>';
-    cancelAnimationFrame(this.animationId);
-  },
-  stop() {
-    if (this.isPlaying) this.nodes.input.stop();
-    this.pauseTime = 0; this.isPlaying = false;
-    document.getElementById('play-btn').innerHTML = '<i class="fas fa-play"></i>';
-    cancelAnimationFrame(this.animationId);
-  },
-  reset() { this.stop(); Effects.resetAll(); App.toast('🔄 تم إعادة التعيين', 'info'); },
-  drawWaveform() {
-    const canvas = document.getElementById('waveform');
-    const ctx = canvas.getContext('2d');
-    canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2;
-    const data = this.buffer.getChannelData(0);
-    const step = Math.ceil(data.length / canvas.width);
-    const amp = canvas.height / 2;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-    gradient.addColorStop(0, '#667eea'); gradient.addColorStop(1, '#764ba2');
-    ctx.fillStyle = gradient;
-    for (let i = 0; i < canvas.width; i++) {
-      let min = 1.0, max = -1.0;
-      for (let j = 0; j < step; j++) { const datum = data[(i * step) + j] || 0; if (datum < min) min = datum; if (datum > max) max = datum; }
-      ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp));
-    }
-  },
-  
-  // ميزة إزالة الموسيقى (Vocal Isolation)
-  removeMusic() {
-    App.toast('🎵 جاري إزالة الموسيقى... (تتطلب معالجة AI)', 'info');
-    setTimeout(() => {
-      App.toast('⚠️ هذه الميزة تتطلب Backend مع نموذج AI متقدم لفصل الصوت عن الموسيقى. للمعالجة الكاملة، نوصي باستخدام خدمات مثل Spleeter أو Demucs.', 'error');
-    }, 1500);
-  },
-  
-  // ميزة مغير الصوت (Voice Changer)
-  voiceChanger() {
-    const pitch = prompt('أدخل قيمة تغيير الطبقة (-12 إلى +12):\n-12: صوت عميق جداً\n0: طبيعي\n+12: صوت حاد جداً', '0');
-    if (pitch !== null) {
-      const pitchValue = parseFloat(pitch);
-      if (!isNaN(pitchValue) && pitchValue >= -12 && pitchValue <= 12) {
-        // تطبيق تغيير الطبقة
-        const playbackRate = Math.pow(2, pitchValue / 12);
-        if (this.nodes.input) {
-          this.nodes.input.playbackRate.value = playbackRate;
-          App.toast(`🎤 تم تغيير الطبقة إلى ${pitchValue}`, 'success');
-        } else {
-          App.toast('❌ ارفع ملفاً صوتياً أولاً', 'error');
-        }
-      } else {
-        App.toast('❌ قيمة غير صحيحة. استخدم رقم بين -12 و +12', 'error');
-      }
-    }
-  },
-  
-  // ميزة استنساخ الصوت (Voice Cloning)
-  cloneVoice() {
-    App.toast('🤖 استنساخ الصوت...', 'info');
-    setTimeout(() => {
-      App.toast('⚠️ استنساخ الصوت يتطلب:\n1. Backend مع نموذج AI (مثل Tacotron أو FastSpeech)\n2. عينة صوتية للتدريب (5-10 دقائق)\n3. معالجة سحابية قوية\n\nلتنفيذ هذه الميزة، نوصي باستخدام خدمات مثل:\n- ElevenLabs API\n- Resemble AI\n- Descript', 'error');
-    }, 1500);
-  },
-  
-  async export() {
-    if (!this.buffer) return;
-    App.showLoading(true); App.toast('⏳ جاري معالجة الملف...', 'info');
-    try {
-      const offlineCtx = new OfflineAudioContext(this.buffer.numberOfChannels, this.buffer.length, this.buffer.sampleRate);
-      const source = offlineCtx.createBufferSource(); source.buffer = this.buffer;
-      const gain = offlineCtx.createGain(); gain.gain.value = this.nodes.gain.gain.value;
-      source.connect(gain); gain.connect(offlineCtx.destination);
-      const rendered = await offlineCtx.startRendering();
-      const wav = this.bufferToWav(rendered);
-      const blob = new Blob([wav], { type: 'audio/wav' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `audiopro_${this.fileName.replace(/\.[^/.]+$/, '')}_processed.wav`; a.click();
-      URL.revokeObjectURL(url);
-      App.toast('✅ تم تحميل الملف!', 'success');
-    } catch (err) { App.toast('❌ خطأ في التصدير', 'error'); } finally { App.showLoading(false); }
-  },
-  bufferToWav(buffer) {
-    const numChannels = buffer.numberOfChannels; const sampleRate = buffer.sampleRate;
-    const bitDepth = 16; const bytesPerSample = bitDepth / 8;
-    const blockAlign = numChannels * bytesPerSample;
-    const dataLength = buffer.length * blockAlign;
-    const totalLength = 44 + dataLength;
-    const arrayBuffer = new ArrayBuffer(totalLength);
-    const view = new DataView(arrayBuffer);
-    const writeString = (offset, string) => { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); };
-    writeString(0, 'RIFF'); view.setUint32(4, totalLength - 8, true); writeString(8, 'WAVE');
-    writeString(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * blockAlign, true); view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bitDepth, true); writeString(36, 'data'); view.setUint32(40, dataLength, true);
-    const channels = []; for (let i = 0; i < numChannels; i++) channels.push(buffer.getChannelData(i));
-    let offset = 44;
-    for (let i = 0; i < buffer.length; i++) {
-      for (let ch = 0; ch < numChannels; ch++) {
-        const sample = Math.max(-1, Math.min(1, channels[ch][i]));
-        view.setInt16(offset, sample * 0x7FFF, true); offset += 2;
-      }
-    }
-    return arrayBuffer;
-  },
-  formatTime(seconds) { const m = Math.floor(seconds / 60); const s = Math.floor(seconds % 60); return `${m}:${s.toString().padStart(2, '0')}`; }
-};
+    document.getElementById('page-title').textContent = titles[tabName];
 
-// ============ Effects ============
-const Effects = {
-  list: [
-    { id: 'noise', name: '🎤 إزالة الضوضاء AI', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'highpass', name: '🔊 High-Pass Filter', min: 0, max: 500, value: 80, unit: 'Hz' },
-    { id: 'lowpass', name: '🔉 Low-Pass Filter', min: 2000, max: 20000, value: 12000, unit: 'Hz' },
-    { id: 'compressor', name: '📊 Compressor', min: -60, max: 0, value: -24, unit: 'dB' },
-    { id: 'eq_bass', name: '🎚️ EQ Bass (60Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_lowmid', name: '🎚️ EQ Low-Mid (250Hz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_mid', name: '🎚️ EQ Mid (1kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_highmid', name: '🎚️ EQ High-Mid (4kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'eq_treble', name: '🎚️ EQ Treble (12kHz)', min: -12, max: 12, value: 0, unit: 'dB' },
-    { id: 'reverb', name: '🏛️ الصدى (Reverb)', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'delay', name: '⏱️ التأخير (Delay)', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'delayTime', name: '⏰ Delay Time', min: 0.1, max: 1, value: 0.3, step: 0.01, unit: 's' },
-    { id: 'delayFeedback', name: '🔁 Delay Feedback', min: 0, max: 90, value: 30, unit: '%' },
-    { id: 'chorus', name: '🎵 Chorus', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'flanger', name: '🌊 Flanger', min: 0, max: 100, value: 0, unit: '%' },
-    { id: 'volume', name: '🔊 مستوى الصوت', min: 0, max: 200, value: 100, unit: '%' }
-  ],
-  init() {
-    const container = document.getElementById('effects-container');
-    container.innerHTML = '';
-    this.list.forEach(effect => {
-      const step = effect.step || 1;
-      const div = document.createElement('div');
-      div.className = 'mb-4';
-      div.innerHTML = `<label class="flex justify-between mb-2 text-sm"><span>${effect.name}</span><span id="${effect.id}-val" class="text-purple-400 font-bold">${effect.value}${effect.unit || ''}</span></label><input type="range" id="${effect.id}-slider" min="${effect.min}" max="${effect.max}" value="${effect.value}" step="${step}" class="slider" oninput="Effects.update('${effect.id}', this.value)">`;
-      container.appendChild(div);
+    if (tabName === 'users') this.loadUsers();
+    if (tabName === 'projects') this.loadProjects();
+  },
+
+  async loadDashboard() {
+    try {
+      const usersSnap = await db.collection('users').get();
+      const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      this.allUsers = users;
+
+      document.getElementById('stat-users').textContent = users.length;
+
+      const proUsers = users.filter(u => u.plan === 'pro' || u.plan === 'studio');
+      document.getElementById('stat-pro').textContent = proUsers.length;
+
+      const revenue = proUsers.reduce((sum, u) => sum + (u.plan === 'pro' ? 9.99 : 24.99), 0);
+      document.getElementById('stat-revenue').textContent = '$' + revenue.toFixed(2);
+
+      const recent = [...users].sort((a, b) => {
+        const aTime = a.createdAt?.toMillis?.() || 0;
+        const bTime = b.createdAt?.toMillis?.() || 0;
+        return bTime - aTime;
+      }).slice(0, 5);
+
+      const recentHtml = recent.map(u => `
+        <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 gradient-btn rounded-full flex items-center justify-center">
+              <i class="fas fa-user"></i>
+            </div>
+            <div>
+              <div class="font-bold">${u.name || 'مستخدم'}</div>
+              <div class="text-sm text-gray-400">${u.email || '-'}</div>
+            </div>
+          </div>
+          <span class="badge badge-${u.plan || 'free'}">${u.plan || 'free'}</span>
+        </div>
+      `).join('');
+      document.getElementById('recent-users').innerHTML = recentHtml || '<p class="text-gray-400 text-center">لا يوجد مستخدمين بعد</p>';
+
+      const freeCount = users.filter(u => u.plan === 'free' || !u.plan).length;
+      const proCount = users.filter(u => u.plan === 'pro').length;
+      const studioCount = users.filter(u => u.plan === 'studio').length;
+      const total = users.length || 1;
+
+      document.getElementById('plans-chart').innerHTML = `
+        <div>
+          <div class="flex justify-between mb-1"><span>مجاني</span><span>${freeCount} (${Math.round(freeCount/total*100)}%)</span></div>
+          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:${freeCount/total*100}%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1"><span>احترافي</span><span>${proCount} (${Math.round(proCount/total*100)}%)</span></div>
+          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full" style="width:${proCount/total*100}%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1"><span>استوديو</span><span>${studioCount} (${Math.round(studioCount/total*100)}%)</span></div>
+          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-purple-500 h-2 rounded-full" style="width:${studioCount/total*100}%"></div></div>
+        </div>
+      `;
+
+      document.getElementById('activity-log').innerHTML = `
+        <div class="flex items-center gap-3 p-2"><i class="fas fa-circle text-green-400 text-xs"></i><span class="text-sm">تم تحميل لوحة التحكم</span><span class="text-xs text-gray-500 mr-auto">الآن</span></div>
+        <div class="flex items-center gap-3 p-2"><i class="fas fa-user-plus text-blue-400 text-xs"></i><span class="text-sm">${users.length} مستخدم مسجل</span><span class="text-xs text-gray-500 mr-auto">إجمالي</span></div>
+        <div class="flex items-center gap-3 p-2"><i class="fas fa-crown text-yellow-400 text-xs"></i><span class="text-sm">${proUsers.length} مشترك مدفوع</span><span class="text-xs text-gray-500 mr-auto">نشط</span></div>
+      `;
+
+    } catch (err) {
+      console.error(err);
+      AdminAuth.toast('خطأ في تحميل البيانات', 'error');
+    }
+  },
+
+  async loadUsers() {
+    const tbody = document.getElementById('users-table');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">جاري التحميل...</td></tr>';
+
+    try {
+      const snap = await db.collection('users').get();
+      const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      tbody.innerHTML = users.map(u => `
+        <tr class="table-row border-b border-slate-800">
+          <td class="p-3">${u.name || '-'}</td>
+          <td class="p-3 text-sm">${u.email || '-'}</td>
+          <td class="p-3"><span class="badge badge-${u.plan || 'free'}">${u.plan || 'free'}</span></td>
+          <td class="p-3"><span class="badge badge-active">نشط</span></td>
+          <td class="p-3 text-sm text-gray-400">${u.createdAt?.toDate?.().toLocaleDateString('ar') || '-'}</td>
+          <td class="p-3">
+            <button onclick="Admin.changePlan('${u.id}', 'pro')" class="text-yellow-400 hover:text-yellow-300 ml-2" title="ترقية"><i class="fas fa-crown"></i></button>
+            <button onclick="Admin.deleteUser('${u.id}')" class="text-red-500 hover:text-red-400" title="حذف"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-red-400">خطأ في التحميل</td></tr>';
+    }
+  },
+
+  searchUsers(query) {
+    const rows = document.querySelectorAll('#users-table tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
     });
   },
-  update(id, value) {
-    const effect = this.list.find(e => e.id === id);
-    const v = parseFloat(value);
-    const unit = effect.unit || '';
-    document.getElementById(`${id}-val`).textContent = (Number.isInteger(v) ? v : v.toFixed(2)) + unit;
-    const nodes = AudioEngine.nodes;
-    if (!nodes.highpass) return;
-    switch(id) {
-      case 'noise': nodes.noiseGate.threshold.value = -60 + (v * 0.3); nodes.highpass.frequency.value = 80 + (v * 1.2); nodes.lowpass.frequency.value = 12000 - (v * 40); break;
-      case 'highpass': nodes.highpass.frequency.value = v; break;
-      case 'lowpass': nodes.lowpass.frequency.value = v; break;
-      case 'compressor': nodes.compressor.threshold.value = v; break;
-      case 'eq_bass': nodes.eq[0].gain.value = v; break;
-      case 'eq_lowmid': nodes.eq[1].gain.value = v; break;
-      case 'eq_mid': nodes.eq[2].gain.value = v; break;
-      case 'eq_highmid': nodes.eq[3].gain.value = v; break;
-      case 'eq_treble': nodes.eq[4].gain.value = v; break;
-      case 'reverb': nodes.reverbGain.gain.value = v / 100; break;
-      case 'delay': nodes.delayGain.gain.value = v / 100; break;
-      case 'delayTime': nodes.delay.delayTime.value = v; break;
-      case 'delayFeedback': nodes.delayFeedback.gain.value = v / 100; break;
-      case 'volume': nodes.gain.gain.value = v / 100; break;
-    }
-  },
-  autoEnhance() {
-    const presets = { noise: 65, highpass: 100, lowpass: 11000, compressor: -20, eq_bass: -2, eq_lowmid: 1, eq_mid: 3, eq_highmid: 2, eq_treble: 1, reverb: 10, delay: 0, volume: 110 };
-    Object.entries(presets).forEach(([id, value]) => { const slider = document.getElementById(`${id}-slider`); if (slider) { slider.value = value; this.update(id, value); } });
-    App.toast('✨ تم تطبيق التحسين التلقائي بالذكاء الاصطناعي!', 'success');
-  },
-  resetAll() { this.list.forEach(effect => { const slider = document.getElementById(`${effect.id}-slider`); if (slider) { slider.value = effect.value; this.update(effect.id, effect.value); } }); }
-};
 
-// ============ IndexedDB (تخزين محلي) ============
-const LocalDB = {
-  dbName: 'AudioProDB',
-  storeName: 'projects',
-  db: null,
-  init() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, 1);
-      request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(this.storeName)) {
-          db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
-        }
-      };
-      request.onsuccess = (e) => { this.db = e.target.result; resolve(); };
-      request.onerror = (e) => reject(e);
-    });
-  },
-  async saveProject() {
-    if (!AudioEngine.buffer) { App.toast('لا يوجد ملف للحفظ', 'error'); return; }
-    if (!Auth.currentUser) { App.toast('سجل دخولك أولاً', 'error'); return; }
+  async changePlan(userId, plan) {
     try {
-      App.showLoading(true);
-      await this.init();
-      const wav = AudioEngine.bufferToWav(AudioEngine.buffer);
-      const project = {
-        userId: Auth.currentUser.uid,
-        name: AudioEngine.fileName,
-        data: wav,
-        size: wav.byteLength,
-        createdAt: new Date().toISOString()
-      };
-      const tx = this.db.transaction(this.storeName, 'readwrite');
-      const store = tx.objectStore(this.storeName);
-      await new Promise((resolve, reject) => {
-        const req = store.add(project);
-        req.onsuccess = resolve;
-        req.onerror = reject;
-      });
-      App.toast('✅ تم الحفظ محلياً!', 'success');
-      this.loadProjects();
-    } catch (err) { App.toast('خطأ في الحفظ', 'error'); } finally { App.showLoading(false); }
+      await db.collection('users').doc(userId).update({ plan: plan });
+      AdminAuth.toast(`تم ترقية المستخدم إلى ${plan}`, 'success');
+      this.loadUsers();
+    } catch (err) { AdminAuth.toast('خطأ', 'error'); }
   },
+
+  async deleteUser(userId) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    try {
+      await db.collection('users').doc(userId).delete();
+      AdminAuth.toast('تم حذف المستخدم', 'success');
+      this.loadUsers();
+      this.loadDashboard();
+    } catch (err) { AdminAuth.toast('خطأ', 'error'); }
+  },
+
   async loadProjects() {
-    if (!Auth.currentUser) return;
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readonly');
-    const store = tx.objectStore(this.storeName);
-    const all = await new Promise((resolve) => {
-      const req = store.getAll();
-      req.onsuccess = () => resolve(req.result);
-    });
-    const userProjects = all.filter(p => p.userId === Auth.currentUser.uid);
-    const container = document.getElementById('my-projects');
-    if (userProjects.length === 0) {
-      container.innerHTML = '<p class="text-gray-400 text-center py-4">لا توجد مشاريع محفوظة</p>';
-      return;
-    }
-    container.innerHTML = userProjects.map(p => `
-      <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 gradient-btn rounded-lg flex items-center justify-center"><i class="fas fa-music"></i></div>
-          <div>
-            <div class="font-bold">${p.name}</div>
-            <div class="text-sm text-gray-400">${(p.size/1024/1024).toFixed(2)} MB • ${new Date(p.createdAt).toLocaleDateString('ar')}</div>
+    const container = document.getElementById('projects-list');
+    container.innerHTML = '<p class="text-center py-8">جاري التحميل...</p>';
+
+    try {
+      const usersSnap = await db.collection('users').get();
+      let allProjects = [];
+
+      for (const userDoc of usersSnap.docs) {
+        const projectsSnap = await userDoc.ref.collection('projects').get();
+        projectsSnap.docs.forEach(p => {
+          allProjects.push({ id: p.id, userId: userDoc.id, ...p.data() });
+        });
+      }
+
+      document.getElementById('stat-projects').textContent = allProjects.length;
+
+      if (allProjects.length === 0) {
+        container.innerHTML = '<p class="text-center py-8 text-gray-400">لا توجد مشاريع بعد</p>';
+        return;
+      }
+
+      container.innerHTML = allProjects.map(p => `
+        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <i class="fas fa-music"></i>
+            </div>
+            <div>
+              <div class="font-bold">${p.name || 'مشروع'}</div>
+              <div class="text-sm text-gray-400">${(p.size/1024/1024).toFixed(2)} MB • ${p.createdAt?.toDate?.().toLocaleDateString('ar') || '-'}</div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <a href="${p.url}" target="_blank" class="text-blue-400 hover:text-blue-300"><i class="fas fa-download"></i></a>
+            <button onclick="Admin.deleteProject('${p.userId}', '${p.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
           </div>
         </div>
-        <div class="flex gap-2">
-          <button onclick="LocalDB.loadProject(${p.id})" class="text-blue-400 hover:text-blue-300"><i class="fas fa-play"></i> تشغيل</button>
-          <button onclick="LocalDB.downloadProject(${p.id})" class="text-green-400 hover:text-green-300"><i class="fas fa-download"></i> تحميل</button>
-          <button onclick="LocalDB.deleteProject(${p.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
-        </div>
-      </div>
-    `).join('');
-  },
-  async loadProject(id) {
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readonly');
-    const store = tx.objectStore(this.storeName);
-    const project = await new Promise((resolve) => {
-      const req = store.get(id);
-      req.onsuccess = () => resolve(req.result);
-    });
-    if (project) {
-      AudioEngine.fileName = project.name;
-      AudioEngine.buffer = await AudioEngine.ctx.decodeAudioData(project.data.slice(0));
-      document.getElementById('file-name').textContent = project.name;
-      document.getElementById('file-info').textContent = `${(project.size/1024/1024).toFixed(2)} MB`;
-      document.getElementById('upload-area').style.display = 'none';
-      document.getElementById('editor').style.display = 'block';
-      AudioEngine.setupGraph();
-      AudioEngine.drawWaveform();
-      Effects.init();
-      App.initVisualizer();
-      App.toast('تم تحميل المشروع', 'success');
+      `).join('');
+    } catch (err) {
+      container.innerHTML = '<p class="text-center py-8 text-red-400">خطأ في التحميل</p>';
     }
   },
-  async downloadProject(id) {
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readonly');
-    const store = tx.objectStore(this.storeName);
-    const project = await new Promise((resolve) => {
-      const req = store.get(id);
-      req.onsuccess = () => resolve(req.result);
-    });
-    if (project) {
-      const blob = new Blob([project.data], { type: 'audio/wav' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = project.name; a.click();
-      URL.revokeObjectURL(url);
-    }
-  },
-  async deleteProject(id) {
+
+  async deleteProject(userId, projectId) {
     if (!confirm('حذف هذا المشروع؟')) return;
-    await this.init();
-    const tx = this.db.transaction(this.storeName, 'readwrite');
-    const store = tx.objectStore(this.storeName);
-    await new Promise((resolve) => {
-      const req = store.delete(id);
-      req.onsuccess = resolve;
-    });
-    App.toast('تم الحذف', 'success');
-    this.loadProjects();
+    try {
+      await db.collection('users').doc(userId).collection('projects').doc(projectId).delete();
+      AdminAuth.toast('تم الحذف', 'success');
+      this.loadProjects();
+    } catch (err) { AdminAuth.toast('خطأ', 'error'); }
+  },
+
+  refreshData() {
+    this.loadDashboard();
+    AdminAuth.toast('تم التحديث', 'success');
+  },
+
+  exportData() {
+    const data = JSON.stringify(this.allUsers, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audiopro_users_${Date.now()}.json`;
+    a.click();
+    AdminAuth.toast('تم تصدير البيانات', 'success');
   }
 };
 
-window.addEventListener('DOMContentLoaded', () => App.init());
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    document.getElementById('admin-name').textContent = user.email;
+    Admin.loadDashboard();
+  }
+});
 </script>
 </body>
 </html>
