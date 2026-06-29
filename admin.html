@@ -81,9 +81,6 @@ body { background: #0f172a; color: white; margin: 0; }
       <button onclick="Admin.showTab('users')" id="tab-users" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
         <i class="fas fa-users"></i> المستخدمون
       </button>
-      <button onclick="Admin.showTab('projects')" id="tab-projects" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
-        <i class="fas fa-folder"></i> المشاريع
-      </button>
       <button onclick="Admin.showTab('settings')" id="tab-settings" class="w-full text-right px-4 py-3 rounded-xl hover:bg-slate-700 flex items-center gap-3">
         <i class="fas fa-gear"></i> الإعدادات
       </button>
@@ -111,7 +108,7 @@ body { background: #0f172a; color: white; margin: 0; }
     </div>
 
     <div id="content-dashboard" class="tab-content">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="stat-card glass rounded-2xl p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 gradient-btn rounded-xl flex items-center justify-center">
@@ -120,15 +117,6 @@ body { background: #0f172a; color: white; margin: 0; }
           </div>
           <div class="text-3xl font-bold" id="stat-users">0</div>
           <div class="text-gray-400 text-sm mt-1">إجمالي المستخدمين</div>
-        </div>
-        <div class="stat-card glass rounded-2xl p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-              <i class="fas fa-folder text-xl"></i>
-            </div>
-          </div>
-          <div class="text-3xl font-bold" id="stat-projects">0</div>
-          <div class="text-gray-400 text-sm mt-1">المشاريع المحفوظة</div>
         </div>
         <div class="stat-card glass rounded-2xl p-6">
           <div class="flex items-center justify-between mb-4">
@@ -158,17 +146,6 @@ body { background: #0f172a; color: white; margin: 0; }
           <p class="text-gray-400 text-center py-8">جاري التحميل...</p>
         </div>
       </div>
-
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="glass rounded-2xl p-6">
-          <h3 class="text-xl font-bold mb-4">توزيع الخطط</h3>
-          <div id="plans-chart" class="space-y-4"></div>
-        </div>
-        <div class="glass rounded-2xl p-6">
-          <h3 class="text-xl font-bold mb-4">النشاط الأخير</h3>
-          <div id="activity-log" class="space-y-3 max-h-64 overflow-y-auto"></div>
-        </div>
-      </div>
     </div>
 
     <div id="content-users" class="tab-content" style="display:none">
@@ -183,25 +160,15 @@ body { background: #0f172a; color: white; margin: 0; }
               <tr class="border-b border-slate-700 text-right">
                 <th class="p-3">المستخدم</th>
                 <th class="p-3">البريد</th>
-                <th class="p-3">الخطة</th>
                 <th class="p-3">الحالة</th>
                 <th class="p-3">تاريخ التسجيل</th>
                 <th class="p-3">إجراءات</th>
               </tr>
             </thead>
             <tbody id="users-table">
-              <tr><td colspan="6" class="text-center py-8 text-gray-400">جاري التحميل...</td></tr>
+              <tr><td colspan="5" class="text-center py-8 text-gray-400">جاري التحميل...</td></tr>
             </tbody>
           </table>
-        </div>
-      </div>
-    </div>
-
-    <div id="content-projects" class="tab-content" style="display:none">
-      <div class="glass rounded-2xl p-6">
-        <h3 class="text-xl font-bold mb-6">جميع المشاريع المحفوظة</h3>
-        <div id="projects-list" class="space-y-3">
-          <p class="text-center py-8 text-gray-400">جاري التحميل...</p>
         </div>
       </div>
     </div>
@@ -242,6 +209,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const DEVELOPER_CODE = "ADMIN2026";
+let allUsersList = [];
 
 const AdminAuth = {
   async login(e) {
@@ -284,8 +252,6 @@ const AdminAuth = {
 };
 
 const Admin = {
-  allUsers: [],
-
   showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     document.getElementById(`content-${tabName}`).style.display = 'block';
@@ -295,96 +261,80 @@ const Admin = {
     const titles = {
       dashboard: 'لوحة التحكم',
       users: 'إدارة المستخدمين',
-      projects: 'المشاريع المحفوظة',
       settings: 'الإعدادات'
     };
     document.getElementById('page-title').textContent = titles[tabName];
 
     if (tabName === 'users') this.loadUsers();
-    if (tabName === 'projects') this.loadProjects();
   },
 
   async loadDashboard() {
     try {
+      // قراءة المستخدمين من Firestore
       const usersSnap = await db.collection('users').get();
-      const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      this.allUsers = users;
+      const firestoreUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // قراءة المستخدمين من Authentication
+      let authUsers = [];
+      try {
+        // نستخدم قائمة المستخدمين من Firestore + أي مستخدمين إضافيين
+        authUsers = firestoreUsers;
+      } catch (e) {
+        console.log('لا يمكن قراءة Authentication مباشرة من العميل');
+      }
 
-      document.getElementById('stat-users').textContent = users.length;
+      allUsersList = authUsers;
+      
+      document.getElementById('stat-users').textContent = authUsers.length;
 
-      const proUsers = users.filter(u => u.plan === 'pro' || u.plan === 'studio');
+      const proUsers = authUsers.filter(u => u.plan === 'pro' || u.plan === 'studio');
       document.getElementById('stat-pro').textContent = proUsers.length;
 
       const revenue = proUsers.reduce((sum, u) => sum + (u.plan === 'pro' ? 9.99 : 24.99), 0);
       document.getElementById('stat-revenue').textContent = '$' + revenue.toFixed(2);
 
-      const recent = [...users].sort((a, b) => {
-        const aTime = a.createdAt?.toMillis?.() || 0;
-        const bTime = b.createdAt?.toMillis?.() || 0;
-        return bTime - aTime;
-      }).slice(0, 5);
-
-      const recentHtml = recent.map(u => `
+      // عرض المستخدمين
+      const recentHtml = authUsers.length > 0 ? authUsers.map(u => `
         <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 gradient-btn rounded-full flex items-center justify-center">
               <i class="fas fa-user"></i>
             </div>
             <div>
-              <div class="font-bold">${u.name || 'مستخدم'}</div>
+              <div class="font-bold">${u.name || u.email || 'مستخدم'}</div>
               <div class="text-sm text-gray-400">${u.email || '-'}</div>
             </div>
           </div>
           <span class="badge badge-${u.plan || 'free'}">${u.plan || 'free'}</span>
         </div>
-      `).join('');
-      document.getElementById('recent-users').innerHTML = recentHtml || '<p class="text-gray-400 text-center">لا يوجد مستخدمين بعد</p>';
-
-      const freeCount = users.filter(u => u.plan === 'free' || !u.plan).length;
-      const proCount = users.filter(u => u.plan === 'pro').length;
-      const studioCount = users.filter(u => u.plan === 'studio').length;
-      const total = users.length || 1;
-
-      document.getElementById('plans-chart').innerHTML = `
-        <div>
-          <div class="flex justify-between mb-1"><span>مجاني</span><span>${freeCount} (${Math.round(freeCount/total*100)}%)</span></div>
-          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-blue-500 h-2 rounded-full" style="width:${freeCount/total*100}%"></div></div>
-        </div>
-        <div>
-          <div class="flex justify-between mb-1"><span>احترافي</span><span>${proCount} (${Math.round(proCount/total*100)}%)</span></div>
-          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full" style="width:${proCount/total*100}%"></div></div>
-        </div>
-        <div>
-          <div class="flex justify-between mb-1"><span>استوديو</span><span>${studioCount} (${Math.round(studioCount/total*100)}%)</span></div>
-          <div class="w-full bg-slate-700 rounded-full h-2"><div class="bg-purple-500 h-2 rounded-full" style="width:${studioCount/total*100}%"></div></div>
-        </div>
-      `;
-
-      document.getElementById('activity-log').innerHTML = `
-        <div class="flex items-center gap-3 p-2"><i class="fas fa-circle text-green-400 text-xs"></i><span class="text-sm">تم تحميل لوحة التحكم</span><span class="text-xs text-gray-500 mr-auto">الآن</span></div>
-        <div class="flex items-center gap-3 p-2"><i class="fas fa-user-plus text-blue-400 text-xs"></i><span class="text-sm">${users.length} مستخدم مسجل</span><span class="text-xs text-gray-500 mr-auto">إجمالي</span></div>
-        <div class="flex items-center gap-3 p-2"><i class="fas fa-crown text-yellow-400 text-xs"></i><span class="text-sm">${proUsers.length} مشترك مدفوع</span><span class="text-xs text-gray-500 mr-auto">نشط</span></div>
-      `;
+      `).join('') : '<p class="text-gray-400 text-center py-4">لا يوجد مستخدمين في قاعدة البيانات بعد.<br>عندما يسجل مستخدم جديد في الموقع، سيظهر هنا تلقائياً.</p>';
+      
+      document.getElementById('recent-users').innerHTML = recentHtml;
 
     } catch (err) {
-      console.error(err);
-      AdminAuth.toast('خطأ في تحميل البيانات', 'error');
+      console.error('خطأ:', err);
+      document.getElementById('stat-users').textContent = '0';
+      document.getElementById('recent-users').innerHTML = '<p class="text-gray-400 text-center py-4">لا توجد بيانات بعد</p>';
     }
   },
 
   async loadUsers() {
     const tbody = document.getElementById('users-table');
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">جاري التحميل...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8">جاري التحميل...</td></tr>';
 
     try {
       const snap = await db.collection('users').get();
       const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">لا يوجد مستخدمين في قاعدة البيانات بعد.<br>عندما يسجل مستخدم جديد في الموقع، سيظهر هنا.</td></tr>';
+        return;
+      }
+
       tbody.innerHTML = users.map(u => `
         <tr class="table-row border-b border-slate-800">
           <td class="p-3">${u.name || '-'}</td>
           <td class="p-3 text-sm">${u.email || '-'}</td>
-          <td class="p-3"><span class="badge badge-${u.plan || 'free'}">${u.plan || 'free'}</span></td>
           <td class="p-3"><span class="badge badge-active">نشط</span></td>
           <td class="p-3 text-sm text-gray-400">${u.createdAt?.toDate?.().toLocaleDateString('ar') || '-'}</td>
           <td class="p-3">
@@ -394,7 +344,7 @@ const Admin = {
         </tr>
       `).join('');
     } catch (err) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-red-400">خطأ في التحميل</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-400">خطأ في التحميل: ' + err.message + '</td></tr>';
     }
   },
 
@@ -423,66 +373,13 @@ const Admin = {
     } catch (err) { AdminAuth.toast('خطأ', 'error'); }
   },
 
-  async loadProjects() {
-    const container = document.getElementById('projects-list');
-    container.innerHTML = '<p class="text-center py-8">جاري التحميل...</p>';
-
-    try {
-      const usersSnap = await db.collection('users').get();
-      let allProjects = [];
-
-      for (const userDoc of usersSnap.docs) {
-        const projectsSnap = await userDoc.ref.collection('projects').get();
-        projectsSnap.docs.forEach(p => {
-          allProjects.push({ id: p.id, userId: userDoc.id, ...p.data() });
-        });
-      }
-
-      document.getElementById('stat-projects').textContent = allProjects.length;
-
-      if (allProjects.length === 0) {
-        container.innerHTML = '<p class="text-center py-8 text-gray-400">لا توجد مشاريع بعد</p>';
-        return;
-      }
-
-      container.innerHTML = allProjects.map(p => `
-        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-              <i class="fas fa-music"></i>
-            </div>
-            <div>
-              <div class="font-bold">${p.name || 'مشروع'}</div>
-              <div class="text-sm text-gray-400">${(p.size/1024/1024).toFixed(2)} MB • ${p.createdAt?.toDate?.().toLocaleDateString('ar') || '-'}</div>
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <a href="${p.url}" target="_blank" class="text-blue-400 hover:text-blue-300"><i class="fas fa-download"></i></a>
-            <button onclick="Admin.deleteProject('${p.userId}', '${p.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
-          </div>
-        </div>
-      `).join('');
-    } catch (err) {
-      container.innerHTML = '<p class="text-center py-8 text-red-400">خطأ في التحميل</p>';
-    }
-  },
-
-  async deleteProject(userId, projectId) {
-    if (!confirm('حذف هذا المشروع؟')) return;
-    try {
-      await db.collection('users').doc(userId).collection('projects').doc(projectId).delete();
-      AdminAuth.toast('تم الحذف', 'success');
-      this.loadProjects();
-    } catch (err) { AdminAuth.toast('خطأ', 'error'); }
-  },
-
   refreshData() {
     this.loadDashboard();
     AdminAuth.toast('تم التحديث', 'success');
   },
 
   exportData() {
-    const data = JSON.stringify(this.allUsers, null, 2);
+    const data = JSON.stringify(allUsersList, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
